@@ -108,7 +108,7 @@ def adjust_based_on_risk(df):
         return -0.1  # Bad risk-to-reward ratio
     return 0
 
-# Calculate overall confidence
+# Calculate overall confidence, expect to use trend_signal and high_tf_df later
 def dynamic_confidence_adjustment(df, trend_signal, high_tf_df, volatility_threshold=0.02, adx_threshold=25):
     confidence = 0.5  # Start with neutral confidence
     
@@ -116,27 +116,9 @@ def dynamic_confidence_adjustment(df, trend_signal, high_tf_df, volatility_thres
     volume_adjustment = adjust_confidence_based_on_volume(df)
     confidence += volume_adjustment
     
-    # Adjust based on ADX (trend strength)
-    adx_adjustment = adjust_based_on_adx(df, adx_threshold)
-    confidence += adx_adjustment
-    
     # Adjust based on volatility (ATR)
     volatility_adjustment = adjust_based_on_volatility(df, volatility_threshold)
     confidence += volatility_adjustment
-    
-    # Multi-timeframe alignment
-    # mtf_adjustment = multi_timeframe_adjustment(df, high_tf_df)
-    # confidence += mtf_adjustment
-    
-    # # Risk-to-reward adjustment (if available)
-    # rr_adjustment = adjust_based_on_risk(df)
-    # confidence += rr_adjustment
-    
-    # Candlestick pattern-based adjustment
-    # if df['bullish_engulfing'].iloc[-1]:
-    #     confidence += 0.1  # Increase confidence for bullish engulfing
-    # if df['bearish_engulfing'].iloc[-1]:
-    #     confidence -= 0.1  # Decrease confidence for bearish engulfing
     
     # Cap confidence between 0 and 1
     confidence = max(min(confidence, 1.0), 0.0)
@@ -144,7 +126,7 @@ def dynamic_confidence_adjustment(df, trend_signal, high_tf_df, volatility_thres
     return confidence
 
 # Trend-following strategy (e.g., 1h candles)
-def trend_following_signals(df, short_window=20, long_window=50):
+def trend_following_signals_sma(df, short_window=20, long_window=50):
     # Create a copy of the DataFrame to avoid the warning
     df = df.copy()
     df['sma_short'] = df['close'].rolling(window=short_window).mean()
@@ -152,6 +134,22 @@ def trend_following_signals(df, short_window=20, long_window=50):
     df['signal'] = 0
     df.loc[df.index[long_window:], 'signal'] = np.where(
         df['sma_short'][long_window:] > df['sma_long'][long_window:], 1, 0
+    )
+    return df
+
+    # Trend-following strategy using EMA (e.g., 1h candles)
+def trend_following_signals_ema(df, short_window=20, long_window=50):
+    # Create a copy of the DataFrame to avoid the warning
+    df = df.copy()
+    
+    # Compute EMAs instead of SMAs
+    df['ema_short'] = df['close'].ewm(span=short_window, adjust=False).mean()
+    df['ema_long'] = df['close'].ewm(span=long_window, adjust=False).mean()
+    
+    # Generate trading signals
+    df['signal'] = 0
+    df.loc[df.index[long_window:], 'signal'] = np.where(
+        df['ema_short'][long_window:] > df['ema_long'][long_window:], 1, 0
     )
     return df
 
@@ -197,52 +195,53 @@ class Position:
 
 # Simulate trading using historical data
 def simulate_trading():
-    # Define multiple time periods to test
+        # Define multiple time periods to test
     periods = {
         'Recent Bull Market': (
-            datetime(2024, 1, 1, 0, 0, 0),
-            datetime(2024, 2, 1, 23, 59, 59)
+            datetime(2024, 1, 1),
+            datetime(2024, 3, 31)
+        ),
+        'Previous Bear Market': (
+            datetime(2023, 7, 1),
+            datetime(2023, 9, 30)
+        ),
+        'Sideways Period': (
+            datetime(2023, 4, 1),
+            datetime(2023, 6, 30)
+        ),
+        'High Volatility': (
+            datetime(2023, 1, 1),
+            datetime(2023, 3, 31)
+        ),
+        'Low Volatility': (
+            datetime(2023, 10, 1),
+            datetime(2023, 12, 31)
         )
     }
-    # ,
-    #     'Previous Bear Market': (
-    #         datetime(2023, 7, 1, 0, 0, 0),
-    #         datetime(2023, 9, 30, 23, 59, 59)
-    #     ),
-    #     'Sideways Period': (
-    #         datetime(2023, 4, 1, 0, 0, 0),
-    #         datetime(2023, 6, 30, 23, 59, 59)
-    #     ),
-    #     'High Volatility': (
-    #         datetime(2023, 1, 1, 0, 0, 0),
-    #         datetime(2023, 3, 31, 23, 59, 59)
-    #     ),
-    #     'Low Volatility': (
-    #         datetime(2023, 10, 1, 0, 0, 0),
-    #         datetime(2023, 12, 31, 23, 59, 59)
-    #     )
-    # }
 
     exchange = ccxt.binanceus()
 
-    for period_name, (start_date, end_date) in periods.items():
-        print(f"\n{'='*50}")
-        print(f"Testing period: {period_name}")
-        print(f"From: {start_date} to {end_date}")
-        print(f"{'='*50}")
+    all_period_summaries = []  # Store all period summaries
 
-        # Initialize profit tracking for this period
-        period_stats = {
-            'trend_trades': [],
-            'scalp_trades': [],
-            'aligned_trades': [],
-            'total_trades': 0,
-            'winning_trades': 0,
-            'losing_trades': 0,
-            'total_pnl': 0
-        }
+    try:
+        for period_name, (start_date, end_date) in periods.items():
+            print(f"\n{'='*50}")
+            print(f"Testing period: {period_name}")
+            print(f"From: {start_date} to {end_date}")
+            print(f"{'='*50}")
 
-        try:
+            # Initialize profit tracking for this period
+            period_stats = {
+                'trend_trades': [],
+                'scalp_trades': [],
+                'aligned_trades': [],
+                'total_trades': 0,
+                'winning_trades': 0,
+                'losing_trades': 0,
+                'total_pnl': 0
+            }
+
+        
             # Load historical data for both timeframes
             trend_df = fetch_historical_data(exchange, 'BTC/USDT', '1h', start_date, end_date)
             scalp_df = fetch_historical_data(exchange, 'BTC/USDT', '5m', start_date, end_date)
@@ -250,6 +249,10 @@ def simulate_trading():
             # Detect candlestick patterns for both timeframes
             trend_df = detect_candlestick_patterns(trend_df)
             scalp_df = detect_candlestick_patterns(scalp_df)
+
+            # Pre-calculate all signals for both timeframes
+            trend_df = trend_following_signals_ema(trend_df)
+            scalp_df = scalping_signals(scalp_df)
 
             # Calculate the minimum required data points
             min_data_points = max(50, 14)  # 50 for long_window in trend_following_signals, 14 for ADX
@@ -267,44 +270,40 @@ def simulate_trading():
                 
                 # Update trend signal only when we enter a new hour
                 if last_hour_processed is None or current_hour > last_hour_processed:
-                    # Get all hourly data up to the current hour
-                    hour_data = trend_df[trend_df.index <= current_hour]
-                    if len(hour_data) >= min_data_points:
-                        hour_data = trend_following_signals(hour_data)
-                        current_trend_signal = hour_data['signal'].iloc[-1]
+                    current_trend_signal = trend_df.loc[current_hour, 'signal'] if current_hour in trend_df.index else 0
                     last_hour_processed = current_hour
 
-                # Get scalp signal using the 5m data up to current point
-                scalp_data = scalping_signals(scalp_df.iloc[:i+1])
-                scalp_signal = scalp_data['signal'].iloc[-1]
+                # Get current scalp signal directly
+                scalp_signal = scalp_df['signal'].iloc[i]
 
-                # Adjust confidence based on all factors
-                confidence = dynamic_confidence_adjustment(scalp_data, current_trend_signal, hour_data)
+                # Adjust confidence based on all factors (reintroduce later)
+                # confidence = dynamic_confidence_adjustment(scalp_df.iloc[i-14:i], current_trend_signal, None)
+                confidence = 0.6
 
                 # Print signals and confidence for debugging
                 progress = (i / len(scalp_df)) * 100
                 print(f"[{progress:.1f}%] [Trend] Signal: {current_trend_signal}, [Scalp] Signal: {scalp_signal}, [Confidence] {confidence:.2f}")
 
                 # Simulate position opening based on confidence
-                if confidence > 0.7 and current_trend_signal == 1:  # Buy signal for trend-following
-                    trend_position = Position('Trend', trend_df.loc[current_hour, 'close'], tp_pct=0.05, sl_pct=0.01)
-                    print(f"Opened trend position at {trend_df.loc[current_hour, 'close']:.2f}")
+                # if confidence >= 0.6 and current_trend_signal == 1 and not trend_position:  # Buy signal for trend-following
+                #     trend_position = Position('Trend', trend_df.loc[current_hour, 'close'], tp_pct=0.75, sl_pct=0.01)
+                #     print(f"Opened trend position at {trend_df.loc[current_hour, 'close']:.2f}")
 
-                # Open scalp positions based on scalp signals
-                if scalp_signal == 1 and not scalp_position:  # Buy scalp signal
-                    scalp_position = Position('Scalp', scalp_df['close'].iloc[i], tp_pct=0.0025, sl_pct=0.003)
-                    print(f"Opened scalp position at {scalp_df['close'].iloc[i]:.2f}")
+                # # Open scalp positions based on scalp signals
+                # if confidence >= 0.6 and scalp_signal == 1 and not scalp_position:  # Buy scalp signal
+                #     scalp_position = Position('Scalp', scalp_df['close'].iloc[i], tp_pct=0.015, sl_pct=0.01)
+                #     print(f"Opened scalp position at {scalp_df['close'].iloc[i]:.2f}")
 
                 # Open aligned positions when both signals are 1
                 if current_trend_signal == 1 and scalp_signal == 1 and not aligned_position:
-                    aligned_position = Position('Aligned', scalp_df['close'].iloc[i], tp_pct=0.05, sl_pct=0.01)
+                    aligned_position = Position('Aligned', scalp_df['close'].iloc[i], tp_pct=0.1, sl_pct=0.01)
                     print(f"Opened aligned position at {scalp_df['close'].iloc[i]:.2f}")
 
                 # Check if any position has been closed
                 if trend_position:
-                    result = trend_position.check_exit(trend_df.loc[current_hour, 'close'])
+                    result = trend_position.check_exit(scalp_df['close'].iloc[i])
                     if result:
-                        print(f"[Trend] Position {result} at {trend_df.loc[current_hour, 'close']:.2f}")
+                        print(f"[Trend] Position {result} at {scalp_df['close'].iloc[i]:.2f}")
                         period_stats['trend_trades'].append({
                             'entry': trend_position.entry_price,
                             'exit': trend_position.exit_price,
@@ -356,11 +355,6 @@ def simulate_trading():
                             period_stats['losing_trades'] += 1
                         aligned_position = None
 
-        except KeyboardInterrupt:
-            print("\nSimulation interrupted by user")
-        except Exception as e:
-            print(f"\nError during simulation: {e}")
-        finally:
             # Print period summary regardless of how the simulation ended
             print(f"\nPeriod Summary for {period_name}:")
             print(f"Total Trades: {period_stats['total_trades']}")
@@ -376,6 +370,34 @@ def simulate_trading():
             print(f"Trend Trades: {len(period_stats['trend_trades'])}")
             print(f"Scalp Trades: {len(period_stats['scalp_trades'])}")
             print(f"Aligned Trades: {len(period_stats['aligned_trades'])}")
+
+            # Store period summary
+            all_period_summaries.append({
+                'period_name': period_name,
+                'stats': period_stats,
+                'win_rate': win_rate,
+                'avg_pnl': (period_stats['total_pnl'] / period_stats['total_trades']) if period_stats['total_trades'] > 0 else 0
+            })
+
+    except KeyboardInterrupt:
+        print("\nSimulation interrupted by user")
+    except Exception as e:
+        print(f"\nError during simulation: {e}")
+    finally:
+        # Print final summary of all periods
+        print("\n" + "="*80)
+        print("FINAL SUMMARY OF ALL PERIODS")
+        print("="*80)
+        for summary in all_period_summaries:
+            print(f"\n{summary['period_name']}:")
+            print(f"Total Trades: {summary['stats']['total_trades']}")
+            print(f"Win Rate: {summary['win_rate']:.2f}%")
+            print(f"Total P&L: {summary['stats']['total_pnl']:.2f}%")
+            print(f"Average P&L per Trade: {summary['avg_pnl']:.2f}%")
+            print(f"Strategy Breakdown - Trend: {len(summary['stats']['trend_trades'])}, "
+                f"Scalp: {len(summary['stats']['scalp_trades'])}, "
+                f"Aligned: {len(summary['stats']['aligned_trades'])}")
+            print("-"*50)
 
 # Run the simulation
 simulate_trading()
