@@ -36,6 +36,7 @@ class EMACrossoverStrategy(TradingStrategy):
         positions = []
 
         for index, row in data.iterrows():
+            # consider changing this to 1 or 2 for more signals
             if row['position'] == 2:  # Buy signal
                 if balance > 0:
                     holdings = balance / row['close']
@@ -47,6 +48,7 @@ class EMACrossoverStrategy(TradingStrategy):
                         'amount': holdings
                     })
             
+            # consider changing this to 1 or 2 for more signals
             elif row['position'] == -2:  # Sell signal
                 if holdings > 0:
                     balance = holdings * row['close']
