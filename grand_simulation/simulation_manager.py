@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta, timezone
 from regime_simulation import RegimeSimulation
+from simulation_summary import SimulationSummary
 import ccxt
 
 class SimulationManager:
@@ -12,7 +13,8 @@ class SimulationManager:
         self.sim_data = {}
         self.sim_parms = {'symbol': '', 'timeframe': '', 'start_date': '', 'end_date': ''}
         
-    def add_simulation(self, name, symbol, timeframe, start_date, end_date, initial_balance=10000):
+    def add_simulation(self, name, symbol, timeframe, start_date, end_date, initial_balance=10000, 
+                       ema_short_window=9, ema_long_window=21):
         """
         Add a new simulation scenario
         
@@ -35,7 +37,9 @@ class SimulationManager:
             'timeframe': timeframe,
             'start_date': start_date,
             'end_date': end_date,
-            'initial_balance': initial_balance
+            'initial_balance': initial_balance,
+            'ema_short_window': ema_short_window,
+            'ema_long_window': ema_long_window
         }
     
     def run_all_simulations(self):
@@ -53,11 +57,11 @@ class SimulationManager:
             self.sim_parms = config
 
             sim = RegimeSimulation(name=name, 
-                                   symbol=config['symbol'], 
-                                   timeframe=config['timeframe'], 
-                                   start_date=config['start_date'], 
-                                   end_date=config['end_date'], 
-                                   initial_balance=config['initial_balance'])
+                                 symbol=config['symbol'], 
+                                 timeframe=config['timeframe'], 
+                                 start_date=config['start_date'], 
+                                 end_date=config['end_date'], 
+                                 initial_balance=config['initial_balance'])
             results = sim.run_simulation(self.sim_data)
             self.results[name] = {
                 'data': results[0],
@@ -66,31 +70,26 @@ class SimulationManager:
                 'regime_performance': results[3]
             }
     
-    def get_summary(self):
-        """Get summary of all simulation results"""
-        summary = {}
-        for name, result in self.results.items():
-            if result['performance']:  # If simulation had trades
-                summary[name] = {
-                    'total_trades': result['performance']['total_trades'],
-                    'win_rate': result['performance']['win_rate'],
-                    'total_return': result['performance']['total_return'],
-                    'max_drawdown': result['performance']['max_drawdown'],
-                    'sharpe_ratio': result['performance']['sharpe_ratio']
-                }
-                
-                # Add regime-specific performance
-                if not result['regime_performance'].empty:
-                    regime_stats = {}
-                    for regime in result['regime_performance'].index:
-                        regime_stats[regime] = {
-                            'trades': result['regime_performance'].loc[regime, ('return', 'count')],
-                            'avg_return': result['regime_performance'].loc[regime, ('return', 'mean')] * 100,
-                            'win_rate': result['regime_performance'].loc[regime, ('win', 'mean')] * 100
-                        }
-                    summary[name]['regime_stats'] = regime_stats
+    def get_summary(self, summary_type='basic'):
+        """
+        Get summary of all simulation results
         
-        return pd.DataFrame(summary).T
+        Parameters:
+        summary_type (str): Type of summary to return ('basic', 'returns', or 'timeframe')
+        
+        Returns:
+        pd.DataFrame: Summary DataFrame
+        """
+        summary = SimulationSummary(self.results)
+        
+        if summary_type == 'basic':
+            return summary.get_basic_summary()
+        elif summary_type == 'returns':
+            return summary.get_returns_summary()
+        elif summary_type == 'timeframe':
+            return summary.get_timeframe_comparison()
+        else:
+            raise ValueError(f"Unknown summary type: {summary_type}")
     
     def plot_equity_curves(self):
         """Plot equity curves for all simulations"""
@@ -214,6 +213,17 @@ if __name__ == "__main__":
     )
 
     manager.add_simulation(
+        'Bull Market 4h',
+        'BTC/USDT',
+        '4h',
+        datetime(2023, 1, 1),
+        datetime(2023, 3, 31),
+        initial_balance=10000,
+        ema_short_window=12,
+        ema_long_window=24
+    )
+    
+    manager.add_simulation(
         'Bull Market 1h',
         'BTC/USDT',
         '1h',
@@ -222,7 +232,28 @@ if __name__ == "__main__":
         initial_balance=10000
     )
 
-    # Add different market scenarios
+    manager.add_simulation(
+        'Bull Market 1h',
+        'BTC/USDT',
+        '1h',
+        datetime(2023, 1, 1),
+        datetime(2023, 3, 31),
+        initial_balance=10000,
+        ema_short_window=12,
+        ema_long_window=24
+    )
+
+    manager.add_simulation(
+        'Bull Market 1h',
+        'BTC/USDT',
+        '1h',
+        datetime(2023, 1, 1),
+        datetime(2023, 3, 31),
+        initial_balance=10000,
+        ema_short_window=20,
+        ema_long_window=50
+    )
+    
     manager.add_simulation(
         'Bull Market 15m',
         'BTC/USDT',
@@ -233,12 +264,45 @@ if __name__ == "__main__":
     )
 
     manager.add_simulation(
+        'Bull Market 15m',
+        'BTC/USDT',
+        '15m',
+        datetime(2023, 1, 1),
+        datetime(2023, 3, 31),
+        initial_balance=10000,
+        ema_short_window=12,
+        ema_long_window=24
+    )
+
+    manager.add_simulation(
+        'Bull Market 15m',
+        'BTC/USDT',
+        '15m',
+        datetime(2023, 1, 1),
+        datetime(2023, 3, 31),
+        initial_balance=10000,
+        ema_short_window=20,
+        ema_long_window=50
+    )
+    
+    manager.add_simulation(
         'Bear Market 4h',
         'BTC/USDT',
         '4h',
         datetime(2023, 4, 1),
         datetime(2023, 6, 30),
         initial_balance=10000
+    )
+
+    manager.add_simulation(
+        'Bear Market 4h',
+        'BTC/USDT',
+        '4h',
+        datetime(2023, 4, 1),
+        datetime(2023, 6, 30),
+        initial_balance=10000,
+        ema_short_window=12,
+        ema_long_window=24
     )
     
     manager.add_simulation(
@@ -251,12 +315,56 @@ if __name__ == "__main__":
     )
 
     manager.add_simulation(
+        'Bear Market 1h',
+        'BTC/USDT',
+        '1h',
+        datetime(2023, 4, 1),
+        datetime(2023, 6, 30),
+        initial_balance=10000,
+        ema_short_window=12,
+        ema_long_window=24
+    )
+
+    manager.add_simulation(
+        'Bear Market 1h',
+        'BTC/USDT',
+        '1h',
+        datetime(2023, 4, 1),
+        datetime(2023, 6, 30),
+        initial_balance=10000,
+        ema_short_window=20,
+        ema_long_window=50
+    )
+    
+    manager.add_simulation(
         'Bear Market 15m',
         'BTC/USDT',
         '15m',
         datetime(2023, 4, 1),
         datetime(2023, 6, 30),
         initial_balance=10000
+    )
+
+    manager.add_simulation(
+        'Bear Market 15m',
+        'BTC/USDT',
+        '15m',
+        datetime(2023, 4, 1),
+        datetime(2023, 6, 30),
+        initial_balance=10000,
+        ema_short_window=12,
+        ema_long_window=24
+    )
+
+    manager.add_simulation(
+        'Bear Market 15m',
+        'BTC/USDT',
+        '15m',
+        datetime(2023, 4, 1),
+        datetime(2023, 6, 30),
+        initial_balance=10000,
+        ema_short_window=20,
+        ema_long_window=50
     )
     
     manager.add_simulation(
@@ -266,6 +374,17 @@ if __name__ == "__main__":
         datetime(2023, 7, 1),
         datetime(2023, 9, 30),
         initial_balance=10000
+    )
+
+    manager.add_simulation(
+        'High Volatility 4h',
+        'BTC/USDT',
+        '4h',
+        datetime(2023, 7, 1),
+        datetime(2023, 9, 30),
+        initial_balance=10000,
+        ema_short_window=12,
+        ema_long_window=24
     )
     
     manager.add_simulation(
@@ -278,12 +397,56 @@ if __name__ == "__main__":
     )
 
     manager.add_simulation(
-        'Bear Market 15m',
+        'High Volatility 1h',
+        'BTC/USDT',
+        '1h',
+        datetime(2023, 7, 1),
+        datetime(2023, 9, 30),
+        initial_balance=10000,
+        ema_short_window=12,
+        ema_long_window=24
+    )
+
+    manager.add_simulation(
+        'High Volatility 1h',
+        'BTC/USDT',
+        '1h',
+        datetime(2023, 7, 1),
+        datetime(2023, 9, 30),
+        initial_balance=10000,
+        ema_short_window=20,
+        ema_long_window=50
+    )
+    
+    manager.add_simulation(
+        'High Volatility 15m',
         'BTC/USDT',
         '15m',
-        datetime(2023, 4, 1),
-        datetime(2023, 6, 30),
+        datetime(2023, 7, 1),
+        datetime(2023, 9, 30),
         initial_balance=10000
+    )
+
+    manager.add_simulation(
+        'High Volatility 15m',
+        'BTC/USDT',
+        '15m',
+        datetime(2023, 7, 1),
+        datetime(2023, 9, 30),
+        initial_balance=10000,
+        ema_short_window=12,
+        ema_long_window=24
+    )
+
+    manager.add_simulation(
+        'High Volatility 15m',
+        'BTC/USDT',
+        '15m',
+        datetime(2023, 7, 1),
+        datetime(2023, 9, 30),
+        initial_balance=10000,
+        ema_short_window=20,
+        ema_long_window=50
     )
     
     manager.add_simulation(
@@ -296,9 +459,51 @@ if __name__ == "__main__":
     )
 
     manager.add_simulation(
+        'Low Volatility 4h',
+        'BTC/USDT',
+        '4h',
+        datetime(2023, 10, 1),
+        datetime(2023, 12, 31),
+        initial_balance=10000,
+        ema_short_window=12,
+        ema_long_window=24
+    )
+    
+    manager.add_simulation(
         'Low Volatility 1h',
         'BTC/USDT',
         '1h',
+        datetime(2023, 10, 1),
+        datetime(2023, 12, 31),
+        initial_balance=10000
+    )
+
+    manager.add_simulation(
+        'Low Volatility 1h',
+        'BTC/USDT',
+        '1h',
+        datetime(2023, 10, 1),
+        datetime(2023, 12, 31),
+        initial_balance=10000,
+        ema_short_window=12,
+        ema_long_window=24
+    )
+
+    manager.add_simulation(
+        'Low Volatility 1h',
+        'BTC/USDT',
+        '1h',
+        datetime(2023, 10, 1),
+        datetime(2023, 12, 31),
+        initial_balance=10000,
+        ema_short_window=20,
+        ema_long_window=50
+    )
+    
+    manager.add_simulation(
+        'Low Volatility 15m',
+        'BTC/USDT',
+        '15m',
         datetime(2023, 10, 1),
         datetime(2023, 12, 31),
         initial_balance=10000
@@ -310,16 +515,34 @@ if __name__ == "__main__":
         '15m',
         datetime(2023, 10, 1),
         datetime(2023, 12, 31),
-        initial_balance=10000
+        initial_balance=10000,
+        ema_short_window=12,
+        ema_long_window=24
+    )
+
+    manager.add_simulation(
+        'Low Volatility 15m',
+        'BTC/USDT',
+        '15m',
+        datetime(2023, 10, 1),
+        datetime(2023, 12, 31),
+        initial_balance=10000,
+        ema_short_window=20,
+        ema_long_window=50
     )
     
     # Run simulations
     manager.run_all_simulations()
     
     # Get and display results
-    summary = manager.get_summary()
-    print("\nSimulation Summary:")
-    print(summary)
+    print("\nBasic Summary:")
+    print(manager.get_summary('basic'))
+    
+    print("\nReturns Summary (sorted by total return):")
+    print(manager.get_summary('returns'))
+    
+    print("\nTimeframe Comparison:")
+    print(manager.get_summary('timeframe'))
     
     # Plot results
     manager.plot_equity_curves()

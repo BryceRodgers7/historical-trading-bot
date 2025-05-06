@@ -11,16 +11,16 @@ class BaseStrategy:
         raise NotImplementedError
 
 class TrendFollowingStrategy(BaseStrategy):
-    def __init__(self, short_window=9, long_window=21):
+    def __init__(self, ema_short_window, ema_long_window):
         super().__init__()
-        self.short_window = short_window
-        self.long_window = long_window
+        self.ema_short_window = ema_short_window
+        self.ema_long_window = ema_long_window
 
     def generate_signals(self, data):
         df = data.copy()
         # Calculate EMAs
-        df['EMA_short'] = df['close'].ewm(span=self.short_window, adjust=False).mean()
-        df['EMA_long'] = df['close'].ewm(span=self.long_window, adjust=False).mean()
+        df['EMA_short'] = df['close'].ewm(span=self.ema_short_window, adjust=False).mean()
+        df['EMA_long'] = df['close'].ewm(span=self.ema_long_window, adjust=False).mean()
         
 
         # Returns a Series where:
@@ -113,16 +113,21 @@ class ScalpingStrategy(BaseStrategy):
 
 class RegimeStrategyFactory:
     @staticmethod
-    def get_strategy(regime):
-        if regime == MarketRegime.TREND_FOLLOWING.value:
-            return TrendFollowingStrategy()
-        elif regime == MarketRegime.MEAN_REVERSION.value:
-            return MeanReversionStrategy()
-        elif regime == MarketRegime.BREAKOUT.value:
-            return BreakoutStrategy()
-        elif regime == MarketRegime.SCALPING.value:
-            return ScalpingStrategy()
-        elif regime == MarketRegime.DO_NOTHING.value:
-            return None
+    def get_strategy(regime, ema_short_window=9, ema_long_window=21):
+        if regime != MarketRegime.DO_NOTHING.value:
+            return TrendFollowingStrategy(ema_short_window, ema_long_window)
         else:
-            raise ValueError(f"Unknown market regime: {regime}") 
+            return None
+        
+        # if regime == MarketRegime.TREND_FOLLOWING.value:
+        #     return TrendFollowingStrategy()
+        # elif regime == MarketRegime.MEAN_REVERSION.value:
+        #     return MeanReversionStrategy()
+        # elif regime == MarketRegime.BREAKOUT.value:
+        #     return BreakoutStrategy()
+        # elif regime == MarketRegime.SCALPING.value:
+        #     return ScalpingStrategy()
+        # elif regime == MarketRegime.DO_NOTHING.value:
+        #     return None
+        # else:
+        #     raise ValueError(f"Unknown market regime: {regime}") 

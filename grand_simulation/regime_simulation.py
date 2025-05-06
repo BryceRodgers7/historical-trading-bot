@@ -8,6 +8,7 @@ class RegimeSimulation:
         self.initial_balance = initial_balance
         self.regime_detector = MarketRegimeDetector()
         self.strategy_factory = RegimeStrategyFactory()
+        self.strategy_parms = {}
         self.name = name
         self.symbol = symbol
         self.timeframe = timeframe
@@ -83,12 +84,12 @@ class RegimeSimulation:
         # Detect market regimes
         df['regime'] = self.regime_detector.detect_regime(df)
         
-        # Initialize simulation columns
-        df['signal'] = 0
-        df['position'] = 0
-        df['balance'] = self.initial_balance
-        df['holdings'] = 0
-        df['equity'] = self.initial_balance
+        # Initialize simulation columns with proper data types
+        df['signal'] = pd.Series(0, index=df.index, dtype='int8')
+        df['position'] = pd.Series(0, index=df.index, dtype='int8')
+        df['balance'] = pd.Series(self.initial_balance, index=df.index, dtype='float64')
+        df['holdings'] = pd.Series(0.0, index=df.index, dtype='float64')
+        df['equity'] = pd.Series(self.initial_balance, index=df.index, dtype='float64')
         
         # Track trades
         trades = []
