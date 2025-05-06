@@ -2,12 +2,14 @@ import pandas as pd
 import numpy as np
 from market_regime_detector import MarketRegimeDetector
 from regime_strategies import RegimeStrategyFactory
+from technical_indicators import TechnicalIndicators
 
 class RegimeSimulation:
     def __init__(self, name, symbol, timeframe, start_date, end_date, initial_balance=10000, lookback_window=100):
         self.initial_balance = initial_balance
         self.regime_detector = MarketRegimeDetector()
         self.strategy_factory = RegimeStrategyFactory()
+        self.technical_indicators = TechnicalIndicators()
         self.strategy_parms = {}
         self.name = name
         self.symbol = symbol
@@ -80,6 +82,9 @@ class RegimeSimulation:
             raise ValueError(f"Not enough data points. Need at least {self.warmup_periods} periods, got {len(data)}")
         
         df = data.copy()
+        
+        # Calculate technical indicators
+        df = self.technical_indicators.calculate_adx(df)
         
         # Detect market regimes
         df['regime'] = self.regime_detector.detect_regime(df)
