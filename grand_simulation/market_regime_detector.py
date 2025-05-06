@@ -13,7 +13,7 @@ class MarketRegimeDetector:
     def __init__(self, 
                  trend_window=20,
                  volatility_window=20,
-                 adx_threshold=25,
+                 adx_threshold=20,
                  range_threshold=0.02,
                  volatility_threshold=0.015):
         self.trend_window = trend_window
@@ -93,7 +93,8 @@ class MarketRegimeDetector:
         df['regime'] = MarketRegime.DO_NOTHING.value
         
         # Create masks for each regime
-        trend_mask = (df['adx'] > self.adx_threshold) & (abs(df['price_change']) > self.range_threshold)
+        old_trend_mask = (df['adx'] > self.adx_threshold) & (abs(df['price_change']) > self.range_threshold)
+        trend_mask = (df['adx'] > self.adx_threshold)
         mean_rev_mask = (df['adx'] < self.adx_threshold) & (abs(df['zscore']) > 2)
         breakout_mask = (df['volatility'] > self.volatility_threshold) & (abs(df['price_change']) > self.range_threshold * 2)
         scalping_mask = (df['volatility'] < self.volatility_threshold * 0.5) & (df['adx'] < self.adx_threshold * 0.5)

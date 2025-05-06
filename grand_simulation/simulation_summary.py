@@ -11,6 +11,23 @@ class SimulationSummary:
         """
         self.results = results
         
+    def _calculate_buy_hold_return(self, data):
+        """
+        Calculate buy & hold return for a given period
+        
+        Parameters:
+        data (pd.DataFrame): Price data with 'close' column
+        
+        Returns:
+        float: Buy & hold return percentage
+        """
+        if len(data) < 2:
+            return 0.0
+        
+        first_price = data['close'].iloc[0]
+        last_price = data['close'].iloc[-1]
+        return ((last_price - first_price) / first_price) * 100
+        
     def get_basic_summary(self):
         """
         Get basic summary of all simulation results
@@ -21,10 +38,15 @@ class SimulationSummary:
         summary = {}
         for name, result in self.results.items():
             if result['performance']:  # If simulation had trades
+                # Calculate buy & hold return
+                buy_hold_return = self._calculate_buy_hold_return(result['data'])
+                
                 summary[name] = {
                     'total_trades': result['performance']['total_trades'],
                     'win_rate': result['performance']['win_rate'],
                     'total_return': result['performance']['total_return'],
+                    'buy_hold_return': buy_hold_return,
+                    'outperformance': result['performance']['total_return'] - buy_hold_return,
                     'max_drawdown': result['performance']['max_drawdown'],
                     'sharpe_ratio': result['performance']['sharpe_ratio']
                 }
@@ -52,6 +74,9 @@ class SimulationSummary:
         summary = {}
         for name, result in self.results.items():
             if result['performance']:  # If simulation had trades
+                # Calculate buy & hold return
+                buy_hold_return = self._calculate_buy_hold_return(result['data'])
+                
                 # Extract timeframe from name (assuming format "Market Type Timeframe")
                 timeframe = name.split()[-1] if len(name.split()) > 2 else 'unknown'
                 market_type = ' '.join(name.split()[:-1]) if len(name.split()) > 2 else name
@@ -62,6 +87,8 @@ class SimulationSummary:
                     'total_trades': result['performance']['total_trades'],
                     'win_rate': result['performance']['win_rate'],
                     'total_return': result['performance']['total_return'],
+                    'buy_hold_return': buy_hold_return,
+                    'outperformance': result['performance']['total_return'] - buy_hold_return,
                     'max_drawdown': result['performance']['max_drawdown'],
                     'sharpe_ratio': result['performance']['sharpe_ratio'],
                     'trading_periods': result['performance']['trading_periods']
@@ -69,7 +96,7 @@ class SimulationSummary:
         
         # Convert to DataFrame and sort by total return
         df = pd.DataFrame(summary).T
-        return df.sort_values('total_return', ascending=False)
+        return df.sort_values('outperformance', ascending=False)
     
     def get_timeframe_comparison(self):
         """
@@ -81,6 +108,9 @@ class SimulationSummary:
         summary = {}
         for name, result in self.results.items():
             if result['performance']:  # If simulation had trades
+                # Calculate buy & hold return
+                buy_hold_return = self._calculate_buy_hold_return(result['data'])
+                
                 # Extract timeframe from name (assuming format "Market Type Timeframe")
                 timeframe = name.split()[-1] if len(name.split()) > 2 else 'unknown'
                 market_type = ' '.join(name.split()[:-1]) if len(name.split()) > 2 else name
@@ -89,10 +119,13 @@ class SimulationSummary:
                     'market_type': market_type,
                     'timeframe': timeframe,
                     'total_return': result['performance']['total_return'],
+                    'buy_hold_return': buy_hold_return,
+                    'outperformance': result['performance']['total_return'] - buy_hold_return,
                     'win_rate': result['performance']['win_rate'],
                     'sharpe_ratio': result['performance']['sharpe_ratio']
                 }
         
         # Convert to DataFrame and pivot
         df = pd.DataFrame(summary).T
-        return df.pivot(index='market_type', columns='timeframe', values=['total_return', 'win_rate', 'sharpe_ratio']) 
+        return df.pivot(index='market_type', columns='timeframe', 
+                       values=['total_return', 'buy_hold_return', 'outperformance', 'win_rate', 'sharpe_ratio']) 
