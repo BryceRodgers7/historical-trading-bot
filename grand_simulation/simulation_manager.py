@@ -14,7 +14,7 @@ class SimulationManager:
         self.sim_parms = {'symbol': '', 'timeframe': '', 'start_date': '', 'end_date': ''}
         
     def add_simulation(self, name, symbol, timeframe, start_date, end_date, initial_balance=10000, 
-                       ema_short_window=9, ema_long_window=21):
+                       ema_fast_window=9, ema_slow_window=21, bb_window=20, bb_std=2, lookback_window=100):
         """
         Add a new simulation scenario
         
@@ -25,6 +25,11 @@ class SimulationManager:
         start_date (str or datetime): Start date to simulate (format: 'YYYY-MM-DD' or datetime object)
         end_date (str or datetime): End date to simulate (format: 'YYYY-MM-DD' or datetime object)
         initial_balance (float): Starting capital
+        ema_fast_window (int): Fast EMA window
+        ema_slow_window (int): Slow EMA window
+        bb_window (int): Bollinger Bands window
+        bb_std (float): Bollinger Bands standard deviation
+        lookback_window (int): Window size for lookback calculations
         """
         # Convert string dates to datetime if needed
         if isinstance(start_date, str):
@@ -38,8 +43,11 @@ class SimulationManager:
             'start_date': start_date,
             'end_date': end_date,
             'initial_balance': initial_balance,
-            'ema_short_window': ema_short_window,
-            'ema_long_window': ema_long_window
+            'ema_fast_window': ema_fast_window,
+            'ema_slow_window': ema_slow_window,
+            'bb_window': bb_window,
+            'bb_std': bb_std,
+            'lookback_window': lookback_window
         }
     
     def run_all_simulations(self):
@@ -61,7 +69,12 @@ class SimulationManager:
                                  timeframe=config['timeframe'], 
                                  start_date=config['start_date'], 
                                  end_date=config['end_date'], 
-                                 initial_balance=config['initial_balance'])
+                                 initial_balance=config['initial_balance'],
+                                 ema_fast_window=config['ema_fast_window'],
+                                 ema_slow_window=config['ema_slow_window'],
+                                 bb_window=config['bb_window'],
+                                 bb_std=config['bb_std'],
+                                 lookback_window=config['lookback_window'])
             
             print(f"Running simulation: {name}")
 
@@ -222,8 +235,8 @@ if __name__ == "__main__":
         datetime(2023, 1, 1),
         datetime(2023, 3, 31),
         initial_balance=10000,
-        ema_short_window=12,
-        ema_long_window=24
+        ema_fast_window=12,
+        ema_slow_window=24
     )
     
     manager.add_simulation(
@@ -242,8 +255,8 @@ if __name__ == "__main__":
         datetime(2023, 1, 1),
         datetime(2023, 3, 31),
         initial_balance=10000,
-        ema_short_window=12,
-        ema_long_window=24
+        ema_fast_window=12,
+        ema_slow_window=24
     )
 
     manager.add_simulation(
@@ -253,8 +266,8 @@ if __name__ == "__main__":
         datetime(2023, 1, 1),
         datetime(2023, 3, 31),
         initial_balance=10000,
-        ema_short_window=20,
-        ema_long_window=50
+        ema_fast_window=20,
+        ema_slow_window=50
     )
     
     manager.add_simulation(
@@ -273,8 +286,8 @@ if __name__ == "__main__":
         datetime(2023, 1, 1),
         datetime(2023, 3, 31),
         initial_balance=10000,
-        ema_short_window=12,
-        ema_long_window=24
+        ema_fast_window=12,
+        ema_slow_window=24
     )
 
     manager.add_simulation(
@@ -284,8 +297,8 @@ if __name__ == "__main__":
         datetime(2023, 1, 1),
         datetime(2023, 3, 31),
         initial_balance=10000,
-        ema_short_window=20,
-        ema_long_window=50
+        ema_fast_window=20,
+        ema_slow_window=50
     )
     
     manager.add_simulation(
@@ -304,8 +317,8 @@ if __name__ == "__main__":
         datetime(2023, 4, 1),
         datetime(2023, 6, 30),
         initial_balance=10000,
-        ema_short_window=12,
-        ema_long_window=24
+        ema_fast_window=12,
+        ema_slow_window=24
     )
     
     manager.add_simulation(
@@ -324,8 +337,8 @@ if __name__ == "__main__":
         datetime(2023, 4, 1),
         datetime(2023, 6, 30),
         initial_balance=10000,
-        ema_short_window=12,
-        ema_long_window=24
+        ema_fast_window=12,
+        ema_slow_window=24
     )
 
     manager.add_simulation(
@@ -335,8 +348,8 @@ if __name__ == "__main__":
         datetime(2023, 4, 1),
         datetime(2023, 6, 30),
         initial_balance=10000,
-        ema_short_window=20,
-        ema_long_window=50
+        ema_fast_window=20,
+        ema_slow_window=50
     )
     
     manager.add_simulation(
@@ -355,8 +368,8 @@ if __name__ == "__main__":
         datetime(2023, 4, 1),
         datetime(2023, 6, 30),
         initial_balance=10000,
-        ema_short_window=12,
-        ema_long_window=24
+        ema_fast_window=12,
+        ema_slow_window=24
     )
 
     manager.add_simulation(
@@ -366,8 +379,8 @@ if __name__ == "__main__":
         datetime(2023, 4, 1),
         datetime(2023, 6, 30),
         initial_balance=10000,
-        ema_short_window=20,
-        ema_long_window=50
+        ema_fast_window=20,
+        ema_slow_window=50
     )
     
     manager.add_simulation(
@@ -386,8 +399,8 @@ if __name__ == "__main__":
         datetime(2023, 7, 1),
         datetime(2023, 9, 30),
         initial_balance=10000,
-        ema_short_window=12,
-        ema_long_window=24
+        ema_fast_window=12,
+        ema_slow_window=24
     )
     
     manager.add_simulation(
@@ -406,8 +419,8 @@ if __name__ == "__main__":
         datetime(2023, 7, 1),
         datetime(2023, 9, 30),
         initial_balance=10000,
-        ema_short_window=12,
-        ema_long_window=24
+        ema_fast_window=12,
+        ema_slow_window=24
     )
 
     manager.add_simulation(
@@ -417,8 +430,8 @@ if __name__ == "__main__":
         datetime(2023, 7, 1),
         datetime(2023, 9, 30),
         initial_balance=10000,
-        ema_short_window=20,
-        ema_long_window=50
+        ema_fast_window=20,
+        ema_slow_window=50
     )
     
     manager.add_simulation(
@@ -437,8 +450,8 @@ if __name__ == "__main__":
         datetime(2023, 7, 1),
         datetime(2023, 9, 30),
         initial_balance=10000,
-        ema_short_window=12,
-        ema_long_window=24
+        ema_fast_window=12,
+        ema_slow_window=24
     )
 
     manager.add_simulation(
@@ -448,8 +461,8 @@ if __name__ == "__main__":
         datetime(2023, 7, 1),
         datetime(2023, 9, 30),
         initial_balance=10000,
-        ema_short_window=20,
-        ema_long_window=50
+        ema_fast_window=20,
+        ema_slow_window=50
     )
     
     manager.add_simulation(
@@ -468,8 +481,8 @@ if __name__ == "__main__":
         datetime(2023, 10, 1),
         datetime(2023, 12, 31),
         initial_balance=10000,
-        ema_short_window=12,
-        ema_long_window=24
+        ema_fast_window=12,
+        ema_slow_window=24
     )
     
     manager.add_simulation(
@@ -488,8 +501,8 @@ if __name__ == "__main__":
         datetime(2023, 10, 1),
         datetime(2023, 12, 31),
         initial_balance=10000,
-        ema_short_window=12,
-        ema_long_window=24
+        ema_fast_window=12,
+        ema_slow_window=24
     )
 
     manager.add_simulation(
@@ -499,8 +512,8 @@ if __name__ == "__main__":
         datetime(2023, 10, 1),
         datetime(2023, 12, 31),
         initial_balance=10000,
-        ema_short_window=20,
-        ema_long_window=50
+        ema_fast_window=20,
+        ema_slow_window=50
     )
     
     manager.add_simulation(
@@ -519,8 +532,8 @@ if __name__ == "__main__":
         datetime(2023, 10, 1),
         datetime(2023, 12, 31),
         initial_balance=10000,
-        ema_short_window=12,
-        ema_long_window=24
+        ema_fast_window=12,
+        ema_slow_window=24
     )
 
     manager.add_simulation(
@@ -530,8 +543,8 @@ if __name__ == "__main__":
         datetime(2023, 10, 1),
         datetime(2023, 12, 31),
         initial_balance=10000,
-        ema_short_window=20,
-        ema_long_window=50
+        ema_fast_window=20,
+        ema_slow_window=50
     )
     
     # Run simulations

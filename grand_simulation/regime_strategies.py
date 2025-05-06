@@ -11,16 +11,16 @@ class BaseStrategy:
         raise NotImplementedError
 
 class TrendFollowingStrategy(BaseStrategy):
-    def __init__(self, ema_short_window, ema_long_window):
+    # def __init__(self, ema_short_window, ema_long_window):
+    def __init__(self):
         super().__init__()
-        self.ema_short_window = ema_short_window
-        self.ema_long_window = ema_long_window
+        # check if ema_short_window and ema_long_window are present in the data??
 
     def generate_signals(self, data):
         df = data.copy()
-        # Calculate EMAs
-        df['EMA_short'] = df['close'].ewm(span=self.ema_short_window, adjust=False).mean()
-        df['EMA_long'] = df['close'].ewm(span=self.ema_long_window, adjust=False).mean()
+        # Calculate EMAs (should already be done)
+        # df['EMA_short'] = df['close'].ewm(span=self.ema_short_window, adjust=False).mean()
+        # df['EMA_long'] = df['close'].ewm(span=self.ema_long_window, adjust=False).mean()
         
 
         # Returns a Series where:
@@ -28,8 +28,8 @@ class TrendFollowingStrategy(BaseStrategy):
         # -1 = Sell signal (when short EMA crosses below long EMA)
         # 0 = No signal
         df['signal'] = 0
-        df.loc[df['EMA_short'] > df['EMA_long'], 'signal'] = 1
-        df.loc[df['EMA_short'] < df['EMA_long'], 'signal'] = -1
+        df.loc[df['ema_fast'] > df['ema_slow'], 'signal'] = 1
+        df.loc[df['ema_fast'] < df['ema_slow'], 'signal'] = -1
         
         return df['signal']
 
@@ -113,9 +113,12 @@ class ScalpingStrategy(BaseStrategy):
 
 class RegimeStrategyFactory:
     @staticmethod
-    def get_strategy(regime, ema_short_window=9, ema_long_window=21):
+    # def get_strategy(regime, ema_short_window=9, ema_long_window=21):
+    def get_strategy(regime):
         if regime != MarketRegime.DO_NOTHING.value:
-            return TrendFollowingStrategy(ema_short_window, ema_long_window)
+            return TrendFollowingStrategy()
+            # return TrendFollowingStrategy(ema_short_window, ema_long_window)
+        
         else:
             return None
         
