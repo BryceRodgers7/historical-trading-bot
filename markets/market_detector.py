@@ -58,6 +58,7 @@ class MarketDetector:
             'confidences': confidences
         }
 
+    # default lookahead is 10
     def evaluate_market_detection(self, df, lookahead=10):
         """Evaluates how accurate the market labeling is."""
         if len(df) <= lookahead:
@@ -110,7 +111,7 @@ class MarketDetector:
                     # Expect nothing interesting
                     correct = abs(return_pct) < 0.003  # <0.3% move
 
-                print(f"Market Label: {label}, Future Return: {return_pct}, Correct: {correct}")
+                print(f"{(i / (len(df) - lookahead - min_required_length)) * 100}% Market Label: {label}, Future Return: {return_pct}, Correct: {correct}")
                     
                 results.append({
                     'index': df.index[i],

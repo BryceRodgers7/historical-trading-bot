@@ -37,6 +37,7 @@ class TradingBot:
         self.initial_balance = 10000  # Starting with 10,000 USD
         self.balance = self.initial_balance
         self.holdings = 0
+        self.data_parms = {}
 
     def fetch_historical_data(self, start_date=None, end_date=None):
         """Fetch historical data from the exchange for a specific time window"""

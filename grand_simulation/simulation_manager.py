@@ -554,12 +554,12 @@ if __name__ == "__main__":
     print("\nBasic Summary:")
     print(manager.get_summary('basic'))
     
-    print("\nReturns Summary (sorted by total return):")
+    print("\nSorted Summary (sorted by outperformance):")
     print(manager.get_summary('returns'))
     
-    print("\nTimeframe Comparison:")
-    print(manager.get_summary('timeframe'))
+    # print("\nTimeframe Comparison:")
+    # print(manager.get_summary('timeframe'))
     
     # Plot results
-    manager.plot_equity_curves()
-    manager.plot_regime_distribution() 
+    # manager.plot_equity_curves()
+    # manager.plot_regime_distribution() 
