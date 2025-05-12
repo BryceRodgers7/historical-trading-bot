@@ -5,11 +5,11 @@ from regime_strategies import RegimeStrategyFactory
 from technical_indicators import TechnicalIndicators
 
 class RegimeSimulation:
-    def __init__(self, name, symbol, timeframe, start_date, end_date, initial_balance=10000, lookback_window=100, ema_fast_window=9, ema_slow_window=21, bb_window=20, bb_std=2):
+    def __init__(self, name, symbol, timeframe, start_date, end_date, initial_balance=10000, lookback_window=100, ema_fast_window=9, ema_slow_window=21, bb_window=20, bb_std=2, rsi_window=14):
         self.initial_balance = initial_balance
         self.regime_detector = MarketRegimeDetector()
         self.strategy_factory = RegimeStrategyFactory()
-        self.technical_indicators = TechnicalIndicators(adx_period=14, ema_fast_window=ema_fast_window, ema_slow_window=ema_slow_window, bb_window=bb_window, bb_std=bb_std)
+        self.technical_indicators = TechnicalIndicators(adx_period=14, ema_fast_window=ema_fast_window, ema_slow_window=ema_slow_window, bb_window=bb_window, bb_std=bb_std, rsi_window=rsi_window)
         self.strategy_parms = {}
         self.name = name
         self.symbol = symbol
@@ -20,7 +20,10 @@ class RegimeSimulation:
         self.warmup_periods = max(
             self.regime_detector.trend_window,
             self.regime_detector.volatility_window,
-            14  # ADX period
+            self.technical_indicators.rsi_window,
+            self.technical_indicators.ema_slow_window,
+            self.technical_indicators.bb_window,
+            self.technical_indicators.adx_period
         )
 
     def _update_position(self, df, i, current_position, entry_price, entry_time, trades):
@@ -89,6 +92,7 @@ class RegimeSimulation:
         df = self.technical_indicators.calculate_bollinger_bands(df)
         df = self.technical_indicators.flag_volume_spike(df)
         df = self.technical_indicators.check_volatility(df)
+        df = self.technical_indicators.calculate_rsi(df)
         
         # Detect market regimes
         df['regime'] = self.regime_detector.detect_regime(df)
@@ -154,7 +158,8 @@ class RegimeSimulation:
                 'max_drawdown': self._calculate_max_drawdown(trading_equity),
                 'sharpe_ratio': self._calculate_sharpe_ratio(trading_equity),
                 'warmup_periods': self.warmup_periods,
-                'trading_periods': len(trading_equity)
+                'trading_periods': len(trading_equity),
+                'possible_profitable': self.count_profitable_long_trades(df)
             }
             
             # Performance by regime
@@ -178,3 +183,31 @@ class RegimeSimulation:
         returns = equity.pct_change().dropna()
         excess_returns = returns - risk_free_rate/365  # Daily risk-free rate
         return np.sqrt(365) * excess_returns.mean() / excess_returns.std()
+    
+    def count_profitable_long_trades(self, df, profit_threshold=0.01, max_holding_period=20):
+        """
+        Counts the number of possible profitable long trades in OHLCV data,
+        skipping the first few 'warm-up' periods.
+
+        Parameters:
+            df (pd.DataFrame): OHLCV dataframe with 'low' and 'close' columns.
+            profit_threshold (float): Minimum % gain to count as profitable (e.g., 0.01 for 1%).
+            max_holding_period (int): Maximum candles to wait for profit to be hit.
+            warmup_periods (int): Number of periods to skip at the start.
+
+        Returns:
+            int: Number of potentially profitable long trade setups.
+        """
+        df = df.copy().reset_index(drop=True)
+        total_profitable_trades = 0
+
+        for i in range(self.warmup_periods, len(df) - max_holding_period):
+            entry_price = df.loc[i, 'low']
+            target_price = entry_price * (1 + profit_threshold)
+
+            future_closes = df.loc[i+1:i+max_holding_period, 'close']
+            if (future_closes > target_price).any():
+                total_profitable_trades += 1
+
+        return total_profitable_trades
+

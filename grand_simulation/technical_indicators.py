@@ -2,13 +2,13 @@ import numpy as np
 import pandas as pd
 
 class TechnicalIndicators:
-    def __init__(self, adx_period=14, ema_fast_window=9, ema_slow_window=21, bb_window=20, bb_std=2):
+    def __init__(self, adx_period=14, ema_fast_window=9, ema_slow_window=21, bb_window=20, bb_std=2, rsi_window=14):
         self.adx_period = adx_period
         self.ema_fast_window = ema_fast_window
         self.ema_slow_window = ema_slow_window
         self.bb_window = bb_window
         self.bb_std = bb_std
-        
+        self.rsi_window = rsi_window
 
     def calculate_emas(self, df):
         """ 
@@ -83,3 +83,21 @@ class TechnicalIndicators:
         df['adx'] = df['dx'].rolling(window=self.adx_period).mean()
         
         return df 
+    
+    def calculate_rsi(self, df):
+        """
+        Calculate and return the Relative Strength Index (RSI) 
+        """
+        delta = df['close'].diff()
+        gain = delta.clip(lower=0)
+        loss = -delta.clip(upper=0)
+
+        avg_gain = gain.rolling(window=self.rsi_window).mean()
+        avg_loss = loss.rolling(window=self.rsi_window).mean()
+
+        rs = avg_gain / (avg_loss + 1e-10)  # Avoid division by zero
+        rsi = 100 - (100 / (1 + rs))
+
+        df = df.copy()
+        df['rsi'] = rsi
+        return df

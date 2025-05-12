@@ -14,7 +14,7 @@ class SimulationManager:
         self.sim_parms = {'symbol': '', 'timeframe': '', 'start_date': '', 'end_date': ''}
         
     def add_simulation(self, name, symbol, timeframe, start_date, end_date, initial_balance=10000, 
-                       ema_fast_window=9, ema_slow_window=21, bb_window=20, bb_std=2, lookback_window=100):
+                       ema_fast_window=9, ema_slow_window=21, bb_window=20, bb_std=2, rsi_window=14, lookback_window=100):
         """
         Add a new simulation scenario
         
@@ -29,6 +29,7 @@ class SimulationManager:
         ema_slow_window (int): Slow EMA window
         bb_window (int): Bollinger Bands window
         bb_std (float): Bollinger Bands standard deviation
+        rsi_window (int): RSI window
         lookback_window (int): Window size for lookback calculations
         """
         # Convert string dates to datetime if needed
@@ -47,7 +48,8 @@ class SimulationManager:
             'ema_slow_window': ema_slow_window,
             'bb_window': bb_window,
             'bb_std': bb_std,
-            'lookback_window': lookback_window
+            'lookback_window': lookback_window,
+            'rsi_window': rsi_window
         }
     
     def run_all_simulations(self):
@@ -74,6 +76,7 @@ class SimulationManager:
                                  ema_slow_window=config['ema_slow_window'],
                                  bb_window=config['bb_window'],
                                  bb_std=config['bb_std'],
+                                 rsi_window=config['rsi_window'],
                                  lookback_window=config['lookback_window'])
             
             print(f"Running simulation: {name}")
@@ -229,14 +232,14 @@ if __name__ == "__main__":
     )
 
     manager.add_simulation(
-        'Bull Market 4h ema12',
+        'Bull Market 4h ema20',
         'BTC/USDT',
         '4h',
         datetime(2023, 1, 1),
         datetime(2023, 3, 31),
         initial_balance=10000,
-        ema_fast_window=12,
-        ema_slow_window=24
+        ema_fast_window=20,
+        ema_slow_window=50
     )
     
     manager.add_simulation(

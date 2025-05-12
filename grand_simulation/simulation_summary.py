@@ -42,13 +42,12 @@ class SimulationSummary:
                 buy_hold_return = self._calculate_buy_hold_return(result['data'])
                 
                 summary[name] = {
-                    'total_trades': result['performance']['total_trades'],
+                    'ttl_trades': result['performance']['total_trades'],
                     'win_rate': result['performance']['win_rate'],
+                    'poss_wins': result['performance']['possible_profitable'],
                     'total_return': result['performance']['total_return'],
-                    'buy_hold_return': buy_hold_return,
-                    'outperformance': result['performance']['total_return'] - buy_hold_return,
-                    'max_drawdown': result['performance']['max_drawdown'],
-                    'sharpe_ratio': result['performance']['sharpe_ratio']
+                    'hodl_return': buy_hold_return,
+                    'outperform': result['performance']['total_return'] - buy_hold_return
                 }
                 
                 # Add regime-specific performance
@@ -84,19 +83,18 @@ class SimulationSummary:
                 summary[name] = {
                     'market_type': market_type,
                     'timeframe': timeframe,
-                    'total_trades': result['performance']['total_trades'],
+                    'ttl_trades': result['performance']['total_trades'],
                     'win_rate': result['performance']['win_rate'],
+                    'poss_wins': result['performance']['possible_profitable'],
+                    'trading_periods': result['performance']['trading_periods'],
                     'total_return': result['performance']['total_return'],
-                    'buy_hold_return': buy_hold_return,
-                    'outperformance': result['performance']['total_return'] - buy_hold_return,
-                    'max_drawdown': result['performance']['max_drawdown'],
-                    'sharpe_ratio': result['performance']['sharpe_ratio'],
-                    'trading_periods': result['performance']['trading_periods']
+                    'hodl_return': buy_hold_return,
+                    'outperform': result['performance']['total_return'] - buy_hold_return
                 }
         
         # Convert to DataFrame and sort by total return
         df = pd.DataFrame(summary).T
-        return df.sort_values('outperformance', ascending=False)
+        return df.sort_values('outperform', ascending=False)
     
     def get_timeframe_comparison(self):
         """
@@ -119,7 +117,7 @@ class SimulationSummary:
                     'market_type': market_type,
                     'timeframe': timeframe,
                     'total_return': result['performance']['total_return'],
-                    'buy_hold_return': buy_hold_return,
+                    'hodl_return': buy_hold_return,
                     'outperformance': result['performance']['total_return'] - buy_hold_return,
                     'win_rate': result['performance']['win_rate'],
                     'sharpe_ratio': result['performance']['sharpe_ratio']

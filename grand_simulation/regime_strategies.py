@@ -26,7 +26,8 @@ class TrendFollowingStrategy(BaseStrategy):
             (df['adx'] > 20) &
             (df['volume_spike']) &
             (df['volatility_ok']) &
-            (df['close'] > df['bb_mid']),
+            (df['close'] > df['bb_mid']) &
+            (df['rsi'] > 50),
             'signal'
         ] = 1
         
@@ -36,7 +37,8 @@ class TrendFollowingStrategy(BaseStrategy):
             (df['adx'] > 20) &
             (df['volume_spike']) &
             (df['volatility_ok']) &
-            (df['close'] < df['bb_mid']),
+            (df['close'] < df['bb_mid']) &
+            (df['rsi'] < 50),
             'signal'
         ] = -1
         
