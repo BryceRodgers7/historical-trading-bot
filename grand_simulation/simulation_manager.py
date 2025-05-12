@@ -249,17 +249,6 @@ if __name__ == "__main__":
     )
 
     manager.add_simulation(
-        'Bull Market 1h ema12',
-        'BTC/USDT',
-        '1h',
-        datetime(2023, 1, 1),
-        datetime(2023, 3, 31),
-        initial_balance=10000,
-        ema_fast_window=12,
-        ema_slow_window=24
-    )
-
-    manager.add_simulation(
         'Bull Market 1h ema20',
         'BTC/USDT',
         '1h',
@@ -279,16 +268,6 @@ if __name__ == "__main__":
         initial_balance=10000
     )
 
-    manager.add_simulation(
-        'Bull Market 15m ema12',
-        'BTC/USDT',
-        '15m',
-        datetime(2023, 1, 1),
-        datetime(2023, 3, 31),
-        initial_balance=10000,
-        ema_fast_window=12,
-        ema_slow_window=24
-    )
 
     manager.add_simulation(
         'Bull Market 15m ema20',
@@ -310,16 +289,6 @@ if __name__ == "__main__":
         initial_balance=10000
     )
 
-    manager.add_simulation(
-        'Bear Market 4h ema12',
-        'BTC/USDT',
-        '4h',
-        datetime(2023, 4, 1),
-        datetime(2023, 6, 30),
-        initial_balance=10000,
-        ema_fast_window=12,
-        ema_slow_window=24
-    )
     
     manager.add_simulation(
         'Bear Market 1h',
@@ -330,16 +299,6 @@ if __name__ == "__main__":
         initial_balance=10000
     )
 
-    manager.add_simulation(
-        'Bear Market 1h ema12',
-        'BTC/USDT',
-        '1h',
-        datetime(2023, 4, 1),
-        datetime(2023, 6, 30),
-        initial_balance=10000,
-        ema_fast_window=12,
-        ema_slow_window=24
-    )
 
     manager.add_simulation(
         'Bear Market 1h ema20',
@@ -362,17 +321,6 @@ if __name__ == "__main__":
     )
 
     manager.add_simulation(
-        'Bear Market 15m ema12',
-        'BTC/USDT',
-        '15m',
-        datetime(2023, 4, 1),
-        datetime(2023, 6, 30),
-        initial_balance=10000,
-        ema_fast_window=12,
-        ema_slow_window=24
-    )
-
-    manager.add_simulation(
         'Bear Market 15m ema20',
         'BTC/USDT',
         '15m',
@@ -391,17 +339,6 @@ if __name__ == "__main__":
         datetime(2023, 9, 30),
         initial_balance=10000
     )
-
-    manager.add_simulation(
-        'High Volatility 4h ema12',
-        'BTC/USDT',
-        '4h',
-        datetime(2023, 7, 1),
-        datetime(2023, 9, 30),
-        initial_balance=10000,
-        ema_fast_window=12,
-        ema_slow_window=24
-    )
     
     manager.add_simulation(
         'High Volatility 1h',
@@ -410,17 +347,6 @@ if __name__ == "__main__":
         datetime(2023, 7, 1),
         datetime(2023, 9, 30),
         initial_balance=10000
-    )
-
-    manager.add_simulation(
-        'High Volatility 1h ema12',
-        'BTC/USDT',
-        '1h',
-        datetime(2023, 7, 1),
-        datetime(2023, 9, 30),
-        initial_balance=10000,
-        ema_fast_window=12,
-        ema_slow_window=24
     )
 
     manager.add_simulation(
@@ -444,17 +370,6 @@ if __name__ == "__main__":
     )
 
     manager.add_simulation(
-        'High Volatility 15m ema12',
-        'BTC/USDT',
-        '15m',
-        datetime(2023, 7, 1),
-        datetime(2023, 9, 30),
-        initial_balance=10000,
-        ema_fast_window=12,
-        ema_slow_window=24
-    )
-
-    manager.add_simulation(
         'High Volatility 15m ema20',  
         'BTC/USDT',
         '15m',
@@ -473,17 +388,6 @@ if __name__ == "__main__":
         datetime(2023, 12, 31),
         initial_balance=10000
     )
-
-    manager.add_simulation(
-        'Low Volatility 4h ema12',
-        'BTC/USDT',
-        '4h',
-        datetime(2023, 10, 1),
-        datetime(2023, 12, 31),
-        initial_balance=10000,
-        ema_fast_window=12,
-        ema_slow_window=24
-    )
     
     manager.add_simulation(
         'Low Volatility 1h',
@@ -492,17 +396,6 @@ if __name__ == "__main__":
         datetime(2023, 10, 1),
         datetime(2023, 12, 31),
         initial_balance=10000
-    )
-
-    manager.add_simulation(
-        'Low Volatility 1h ema12',
-        'BTC/USDT',
-        '1h',
-        datetime(2023, 10, 1),
-        datetime(2023, 12, 31),
-        initial_balance=10000,
-        ema_fast_window=12,
-        ema_slow_window=24
     )
 
     manager.add_simulation(
@@ -523,17 +416,6 @@ if __name__ == "__main__":
         datetime(2023, 10, 1),
         datetime(2023, 12, 31),
         initial_balance=10000
-    )
-
-    manager.add_simulation(
-        'Low Volatility 15m ema12',
-        'BTC/USDT',
-        '15m',
-        datetime(2023, 10, 1),
-        datetime(2023, 12, 31),
-        initial_balance=10000,
-        ema_fast_window=12,
-        ema_slow_window=24
     )
 
     manager.add_simulation(

@@ -15,22 +15,34 @@ class TrendFollowingStrategy(BaseStrategy):
     def __init__(self):
         super().__init__()
         # check if ema_short_window and ema_long_window are present in the data??
-
+    
     def generate_signals(self, data):
         df = data.copy()
-        # Calculate EMAs (should already be done)
-        # df['EMA_short'] = df['close'].ewm(span=self.ema_short_window, adjust=False).mean()
-        # df['EMA_long'] = df['close'].ewm(span=self.ema_long_window, adjust=False).mean()
-        
-
-        # Returns a Series where:
-        # 1 = Buy signal (when short EMA crosses above long EMA)
-        # -1 = Sell signal (when short EMA crosses below long EMA)
-        # 0 = No signal
         df['signal'] = 0
-        df.loc[df['ema_fast'] > df['ema_slow'], 'signal'] = 1
-        df.loc[df['ema_fast'] < df['ema_slow'], 'signal'] = -1
+
+        # Buy signal
+        df.loc[
+            (df['ema_fast'] > df['ema_slow']) &
+            (df['adx'] > 20) &
+            (df['volume_spike']) &
+            (df['volatility_ok']) &
+            (df['close'] > df['bb_mid']),
+            'signal'
+        ] = 1
         
+        # Sell signal
+        df.loc[
+            (df['ema_fast'] < df['ema_slow']) &
+            (df['adx'] > 20) &
+            (df['volume_spike']) &
+            (df['volatility_ok']) &
+            (df['close'] < df['bb_mid']),
+            'signal'
+        ] = -1
+        
+        # Additional sell signal when price is below fast EMA
+        df.loc[df['close'] < df['ema_fast'], 'signal'] = -1
+
         return df['signal']
 
 class MeanReversionStrategy(BaseStrategy):
