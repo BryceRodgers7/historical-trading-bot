@@ -25,10 +25,12 @@ class PerformanceTuner:
         
         # Define parameter ranges for optimization
         self.param_ranges = {
-            'ema_fast_window': range(5, 21, 2),  # 5 to 20, step 2
-            'ema_slow_window': range(15, 51, 5),  # 15 to 50, step 5
-            'bb_window': range(10, 31, 5),  # 10 to 30, step 5
-            'bb_std': [1.5, 2.0, 2.5, 3.0]  # Common BB standard deviations
+            'ema_fast_window': range(10, 20, 10),  
+            'ema_slow_window': range(20, 50, 30), 
+            'bb_window': range(10, 31, 21),  
+            'bb_std': [2.0, 3.0],  
+            'stop_loss_pct': [0.01, 0.03],  
+            'take_profit_pct': [0.05, 0.1]   
         }
         
         # Store optimization results
@@ -36,7 +38,9 @@ class PerformanceTuner:
         
     def _create_simulation_name(self, params):
         """Create a unique name for the simulation based on parameters"""
-        return f"Opt_{self.timeframe}_EMA{params['ema_fast_window']}_{params['ema_slow_window']}_BB{params['bb_window']}_{params['bb_std']}"
+        return (f"Opt_{self.timeframe}_EMA{params['ema_fast_window']}_{params['ema_slow_window']}_"
+                f"BB{params['bb_window']}_{params['bb_std']}_"
+                f"SL{int(params['stop_loss_pct']*1000)}_TP{int(params['take_profit_pct']*1000)}")
     
     def run_optimization(self, market_type='Bull Market'):
         """
@@ -56,18 +60,21 @@ class PerformanceTuner:
             self.param_ranges['ema_fast_window'],
             self.param_ranges['ema_slow_window'],
             self.param_ranges['bb_window'],
-            self.param_ranges['bb_std']
+            self.param_ranges['bb_std'],
+            self.param_ranges['stop_loss_pct'],
+            self.param_ranges['take_profit_pct']
         ))
         
         total_combinations = len(param_combinations)
         print(f"Running optimization with {total_combinations} parameter combinations...")
         
-        for i, (ema_fast, ema_slow, bb_window, bb_std) in enumerate(param_combinations, 1):
+        for i, (ema_fast, ema_slow, bb_window, bb_std, sl_pct, tp_pct) in enumerate(param_combinations, 1):
             if ema_fast >= ema_slow:  # Skip invalid combinations
                 continue
                 
             print(f"Testing combination {i}/{total_combinations}: "
-                  f"EMA({ema_fast},{ema_slow}) BB({bb_window},{bb_std})")
+                  f"EMA({ema_fast},{ema_slow}) BB({bb_window},{bb_std}) "
+                  f"SL({sl_pct*100}%) TP({tp_pct*100}%)")
             
             # Add simulation with current parameters
             manager.add_simulation(
@@ -75,7 +82,9 @@ class PerformanceTuner:
                     'ema_fast_window': ema_fast,
                     'ema_slow_window': ema_slow,
                     'bb_window': bb_window,
-                    'bb_std': bb_std
+                    'bb_std': bb_std,
+                    'stop_loss_pct': sl_pct,
+                    'take_profit_pct': tp_pct
                 }),
                 symbol=self.symbol,
                 timeframe=self.timeframe,
@@ -85,7 +94,9 @@ class PerformanceTuner:
                 ema_fast_window=ema_fast,
                 ema_slow_window=ema_slow,
                 bb_window=bb_window,
-                bb_std=bb_std
+                bb_std=bb_std,
+                stop_loss_pct=sl_pct,
+                take_profit_pct=tp_pct
             )
         
         # Run all simulations
@@ -99,9 +110,11 @@ class PerformanceTuner:
         summary['ema_slow'] = summary.index.str.extract(r'EMA\d+_(\d+)').astype(int)
         summary['bb_window'] = summary.index.str.extract(r'BB(\d+)').astype(int)
         summary['bb_std'] = summary.index.str.extract(r'BB\d+_([\d.]+)').astype(float)
+        summary['stop_loss'] = summary.index.str.extract(r'SL(\d+)').astype(int) / 1000
+        summary['take_profit'] = summary.index.str.extract(r'TP(\d+)').astype(int) / 1000
         
         # Sort by outperformance
-        self.optimization_results = summary.sort_values('outperformance', ascending=False)
+        self.optimization_results = summary.sort_values('outperform', ascending=False)
         
         return self.optimization_results
     
@@ -131,14 +144,16 @@ class PerformanceTuner:
         
         # Calculate correlations with outperformance
         correlations = {
-            'EMA Fast': self.optimization_results['ema_fast'].corr(self.optimization_results['outperformance']),
-            'EMA Slow': self.optimization_results['ema_slow'].corr(self.optimization_results['outperformance']),
-            'BB Window': self.optimization_results['bb_window'].corr(self.optimization_results['outperformance']),
-            'BB Std': self.optimization_results['bb_std'].corr(self.optimization_results['outperformance'])
+            'EMA Fast': self.optimization_results['ema_fast'].corr(self.optimization_results['outperform']),
+            'EMA Slow': self.optimization_results['ema_slow'].corr(self.optimization_results['outperform']),
+            'BB Window': self.optimization_results['bb_window'].corr(self.optimization_results['outperform']),
+            'BB Std': self.optimization_results['bb_std'].corr(self.optimization_results['outperform']),
+            'Stop Loss': self.optimization_results['stop_loss'].corr(self.optimization_results['outperform']),
+            'Take Profit': self.optimization_results['take_profit'].corr(self.optimization_results['outperform'])
         }
         
         # Plot correlations
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(12, 6))
         plt.bar(correlations.keys(), correlations.values())
         plt.title('Parameter Importance (Correlation with Outperformance)')
         plt.ylabel('Correlation Coefficient')
@@ -157,8 +172,10 @@ class PerformanceTuner:
         import seaborn as sns
         
         # Create pairplot of parameters vs outperformance
-        plot_data = self.optimization_results[['ema_fast', 'ema_slow', 'bb_window', 'bb_std', 'outperformance']]
-        plot_data.columns = ['EMA Fast', 'EMA Slow', 'BB Window', 'BB Std', 'Outperformance']
+        plot_data = self.optimization_results[['ema_fast', 'ema_slow', 'bb_window', 'bb_std', 
+                                             'stop_loss', 'take_profit', 'outperform']]
+        plot_data.columns = ['EMA Fast', 'EMA Slow', 'BB Window', 'BB Std', 
+                           'Stop Loss', 'Take Profit', 'Outperformance']
         
         sns.pairplot(plot_data, diag_kind='kde')
         plt.show()
@@ -181,22 +198,22 @@ if __name__ == "__main__":
     print(bull_tuner.get_best_parameters(top_n=5))
 
     # Create tuner for bear market
-    bear_tuner = PerformanceTuner(
-        symbol='BTC/USDT',
-        timeframe='1h',
-        start_date=datetime(2023, 4, 1),
-        end_date=datetime(2023, 6, 30)
-    )
+    # bear_tuner = PerformanceTuner(
+    #     symbol='BTC/USDT',
+    #     timeframe='1h',
+    #     start_date=datetime(2023, 4, 1),
+    #     end_date=datetime(2023, 6, 30)
+    # )
 
-    # Run optimization
-    bear_results = bear_tuner.run_optimization(market_type='Bear Market')
+    # # Run optimization
+    # bear_results = bear_tuner.run_optimization(market_type='Bear Market')
 
-    # Get best parameters
-    print("\nBest parameter combinations for bear market:")
-    print(bear_tuner.get_best_parameters(top_n=5))
+    # # Get best parameters
+    # print("\nBest parameter combinations for bear market:")
+    # print(bear_tuner.get_best_parameters(top_n=5))
     
     # Plot results
     bull_tuner.plot_parameter_importance()
     bull_tuner.plot_parameter_relationships()
-    bear_tuner.plot_parameter_importance()
-    bear_tuner.plot_parameter_relationships() 
+    # bear_tuner.plot_parameter_importance()
+    # bear_tuner.plot_parameter_relationships() 
