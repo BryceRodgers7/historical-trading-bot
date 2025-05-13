@@ -5,7 +5,8 @@ from regime_strategies import RegimeStrategyFactory
 from technical_indicators import TechnicalIndicators
 
 class RegimeSimulation:
-    def __init__(self, name, symbol, timeframe, start_date, end_date, initial_balance=10000, lookback_window=100, ema_fast_window=9, ema_slow_window=21, bb_window=20, bb_std=2, rsi_window=14):
+    def __init__(self, name, symbol, timeframe, start_date, end_date, initial_balance=10000, lookback_window=100, ema_fast_window=9, ema_slow_window=21, bb_window=20, bb_std=2, rsi_window=14,
+                 stop_loss_pct=0.02, take_profit_pct=0.1):  # 2% stop loss, 4% take profit
         self.initial_balance = initial_balance
         self.regime_detector = MarketRegimeDetector()
         self.strategy_factory = RegimeStrategyFactory()
@@ -17,6 +18,8 @@ class RegimeSimulation:
         self.start_date = start_date
         self.end_date = end_date
         self.lookback_window = lookback_window
+        self.stop_loss_pct = stop_loss_pct
+        self.take_profit_pct = take_profit_pct
         self.warmup_periods = max(
             self.regime_detector.trend_window,
             self.regime_detector.volatility_window,
@@ -28,12 +31,13 @@ class RegimeSimulation:
 
     def _update_position(self, df, i, current_position, entry_price, entry_time, trades):
         """
-        Update trading position based on signal
+        Update trading position based on signal, stop loss, and take profit.
+        Only takes long positions (signal == 1).
         
         Parameters:
         df (pd.DataFrame): Price data
         i (int): Current index
-        current_position (int): Current position (1=long, -1=short, 0=flat)
+        current_position (int): Current position (1=long, 0=flat)
         entry_price (float): Entry price of current position
         entry_time (datetime): Entry time of current position
         trades (list): List of completed trades
@@ -41,14 +45,19 @@ class RegimeSimulation:
         Returns:
         tuple: (new_position, new_entry_price, new_entry_time)
         """
+        current_price = df['close'].iloc[i]
         signal = df['signal'].iloc[i]
         
-        # Only change position if signal is different from current position
-        if signal != current_position:
-            # Close existing position if any
-            if current_position != 0:
-                exit_price = df['close'].iloc[i]
-                pnl = (exit_price - entry_price) * current_position
+        # Only check stop loss and take profit for long positions
+        if current_position == 1 and entry_price > 0:  # Only for long positions with valid entry price
+            # Calculate price change percentage for long position
+            price_change_pct = (current_price - entry_price) / entry_price
+            
+            # Check stop loss
+            if price_change_pct <= -self.stop_loss_pct:
+                # Close position due to stop loss
+                exit_price = current_price
+                pnl = exit_price - entry_price  # Simplified for long-only
                 trades.append({
                     'entry_time': entry_time,
                     'exit_time': df.index[i],
@@ -56,15 +65,48 @@ class RegimeSimulation:
                     'exit_price': exit_price,
                     'position': current_position,
                     'pnl': pnl,
-                    'regime': df['regime'].iloc[i-1]
+                    'regime': df['regime'].iloc[i-1],
+                    'exit_reason': 'stop_loss'
+                })
+                return 0, 0, None  # Return to flat position
+            
+            # Check take profit
+            if price_change_pct >= self.take_profit_pct:
+                # Close position due to take profit
+                exit_price = current_price
+                pnl = exit_price - entry_price  # Simplified for long-only
+                trades.append({
+                    'entry_time': entry_time,
+                    'exit_time': df.index[i],
+                    'entry_price': entry_price,
+                    'exit_price': exit_price,
+                    'position': current_position,
+                    'pnl': pnl,
+                    'regime': df['regime'].iloc[i-1],
+                    'exit_reason': 'take_profit'
+                })
+                return 0, 0, None  # Return to flat position
+        
+        # Only change position if signal is different from current position
+        if signal != current_position:
+            # Close existing position if any
+            if current_position == 1 and entry_price > 0:  # Only for long positions
+                exit_price = current_price
+                pnl = exit_price - entry_price  # Simplified for long-only
+                trades.append({
+                    'entry_time': entry_time,
+                    'exit_time': df.index[i],
+                    'entry_price': entry_price,
+                    'exit_price': exit_price,
+                    'position': current_position,
+                    'pnl': pnl,
+                    'regime': df['regime'].iloc[i-1],
+                    'exit_reason': 'signal'
                 })
             
-            # Open new position based on signal
-            # signal = 1: Buy (go long)
-            # signal = -1: Sell (go short)
-            # signal = 0: No position
+            # Open new position based on signal (long only)
             new_position = signal
-            new_entry_price = df['close'].iloc[i] if signal != 0 else 0
+            new_entry_price = current_price if signal == 1 else 0
             new_entry_time = df.index[i] if signal != 0 else None
             
             return new_position, new_entry_price, new_entry_time

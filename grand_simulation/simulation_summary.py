@@ -41,13 +41,20 @@ class SimulationSummary:
                 # Calculate buy & hold return
                 buy_hold_return = self._calculate_buy_hold_return(result['data'])
                 
+                # Count exit causes
+                trades_df = result['trades']
+                exit_causes = trades_df['exit_reason'].value_counts()
+                
                 summary[name] = {
                     'ttl_trades': result['performance']['total_trades'],
                     'win_rate': result['performance']['win_rate'],
                     'poss_wins': result['performance']['possible_profitable'],
                     'total_return': result['performance']['total_return'],
                     'hodl_return': buy_hold_return,
-                    'outperform': result['performance']['total_return'] - buy_hold_return
+                    'outperform': result['performance']['total_return'] - buy_hold_return,
+                    'tp_exits': exit_causes.get('take_profit', 0),
+                    'sl_exits': exit_causes.get('stop_loss', 0),
+                    'signal_exits': exit_causes.get('signal', 0)
                 }
                 
                 # Add regime-specific performance
@@ -80,6 +87,10 @@ class SimulationSummary:
                 timeframe = name.split()[-1] if len(name.split()) > 2 else 'unknown'
                 market_type = ' '.join(name.split()[:-1]) if len(name.split()) > 2 else name
                 
+                # Count exit causes
+                trades_df = result['trades']
+                exit_causes = trades_df['exit_reason'].value_counts()
+                
                 summary[name] = {
                     'market_type': market_type,
                     'timeframe': timeframe,
@@ -89,7 +100,13 @@ class SimulationSummary:
                     'trading_periods': result['performance']['trading_periods'],
                     'total_return': result['performance']['total_return'],
                     'hodl_return': buy_hold_return,
-                    'outperform': result['performance']['total_return'] - buy_hold_return
+                    'outperform': result['performance']['total_return'] - buy_hold_return,
+                    'tp_exits': exit_causes.get('take_profit', 0),
+                    'sl_exits': exit_causes.get('stop_loss', 0),
+                    'signal_exits': exit_causes.get('signal', 0),
+                    'tp_ratio': exit_causes.get('take_profit', 0) / result['performance']['total_trades'] * 100,
+                    'sl_ratio': exit_causes.get('stop_loss', 0) / result['performance']['total_trades'] * 100,
+                    'signal_ratio': exit_causes.get('signal', 0) / result['performance']['total_trades'] * 100
                 }
         
         # Convert to DataFrame and sort by total return
