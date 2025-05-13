@@ -1,4 +1,5 @@
 from datetime import datetime
+import time
 from simulation_manager import SimulationManager
 from performance_tuner import PerformanceTuner
 
@@ -146,10 +147,17 @@ def run_parameter_optimization():
     return market_results
 
 if __name__ == "__main__":
+    start_time = time.time()
+    print(f"Starting simulation at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    
     # Run market scenarios
     print("Running market scenarios...")
     manager = run_market_scenarios()
     
     # Run optimization for all market types
     # print("\nRunning parameter optimization for all market types...")
-    # market_results = run_parameter_optimization() 
+    # market_results = run_parameter_optimization()
+    
+    end_time = time.time()
+    print(f"\nTotal execution time: {end_time - start_time:.2f} seconds")
+    print(f"Simulation completed at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}") 
