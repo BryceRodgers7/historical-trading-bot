@@ -1,12 +1,12 @@
 import pandas as pd
 import numpy as np
 from market_regime_detector import MarketRegimeDetector
-from regime_strategies import RegimeStrategyFactory
+from strategy_factory import RegimeStrategyFactory
 from technical_indicators import TechnicalIndicators
 
 class RegimeSimulation:
     def __init__(self, name, symbol, timeframe, start_date, end_date, initial_balance=10000, lookback_window=100, ema_fast_window=9, ema_slow_window=21, bb_window=20, bb_std=2, rsi_window=14,
-                 stop_loss_pct=0.02, take_profit_pct=0.1):  # 2% stop loss, 4% take profit
+                 stop_loss_pct=0.02, take_profit_pct=0.1):  
         self.initial_balance = initial_balance
         self.regime_detector = MarketRegimeDetector()
         self.strategy_factory = RegimeStrategyFactory()
