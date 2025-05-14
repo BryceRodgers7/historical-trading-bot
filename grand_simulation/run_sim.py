@@ -4,35 +4,34 @@ from simulation_manager import SimulationManager
 from performance_tuner import PerformanceTuner
 
 def run_market_scenarios():
-
     # Create simulation manager
     manager = SimulationManager()
     
     # Define market periods with multiple examples of each regime
     market_periods = {
         # Bull Markets
-        'Bull Market Q1 2023': (datetime(2023, 1, 1), datetime(2023, 3, 31)),  # Strong uptrend
+        # 'Bull Market Q1 2023': (datetime(2023, 1, 1), datetime(2023, 3, 31)),  # Strong uptrend
         'Bull Market Q4 2020': (datetime(2020, 10, 1), datetime(2020, 12, 31)),  # Post-COVID recovery
-        'Bull Market Q4 2017': (datetime(2017, 10, 1), datetime(2017, 12, 31)),  # Previous cycle peak
+        # 'Bull Market Q4 2017': (datetime(2017, 10, 1), datetime(2017, 12, 31)),  # Previous cycle peak
         
         # Bear Markets
-        'Bear Market Q2 2023': (datetime(2023, 4, 1), datetime(2023, 6, 30)),  # Recent correction
-        'Bear Market Q2 2022': (datetime(2022, 4, 1), datetime(2022, 6, 30)),  # LUNA crash
-        'Bear Market Q1 2018': (datetime(2018, 1, 1), datetime(2018, 3, 31)),  # Post-2017 crash
+        # 'Bear Market Q2 2023': (datetime(2023, 4, 1), datetime(2023, 6, 30)),  # Recent correction
+        # 'Bear Market Q2 2022': (datetime(2022, 4, 1), datetime(2022, 6, 30)),  # LUNA crash
+        # 'Bear Market Q1 2018': (datetime(2018, 1, 1), datetime(2018, 3, 31)),  # Post-2017 crash
         
         # High Volatility Periods
-        'High Vol Q3 2023': (datetime(2023, 7, 1), datetime(2023, 9, 30)),  # Recent volatility
-        'High Vol Q1 2020': (datetime(2020, 1, 1), datetime(2020, 3, 31)),  # COVID crash
-        'High Vol Q4 2018': (datetime(2018, 10, 1), datetime(2018, 12, 31)),  # End of 2018 bear
+        # 'High Vol Q3 2023': (datetime(2023, 7, 1), datetime(2023, 9, 30)),  # Recent volatility
+        # 'High Vol Q1 2020': (datetime(2020, 1, 1), datetime(2020, 3, 31)),  # COVID crash
+        # 'High Vol Q4 2018': (datetime(2018, 10, 1), datetime(2018, 12, 31)),  # End of 2018 bear
         
         # Low Volatility Periods
-        'Low Vol Q4 2023': (datetime(2023, 10, 1), datetime(2023, 12, 31)),  # Recent consolidation
-        'Low Vol Q2 2019': (datetime(2019, 4, 1), datetime(2019, 6, 30)),  # Pre-2019 bull
-        'Low Vol Q3 2016': (datetime(2016, 7, 1), datetime(2016, 9, 30)),  # Pre-2017 bull
+        # 'Low Vol Q4 2023': (datetime(2023, 10, 1), datetime(2023, 12, 31)),  # Recent consolidation
+        # 'Low Vol Q2 2019': (datetime(2019, 4, 1), datetime(2019, 6, 30)),  # Pre-2019 bull
+        # 'Low Vol Q3 2016': (datetime(2016, 7, 1), datetime(2016, 9, 30)),  # Pre-2017 bull
         
         # Sideways/Choppy Markets
-        'Sideways Q3 2019': (datetime(2019, 7, 1), datetime(2019, 9, 30)),  # Pre-breakout
-        'Sideways Q2 2021': (datetime(2021, 4, 1), datetime(2021, 6, 30)),  # Post-April 2021 peak
+        # 'Sideways Q3 2019': (datetime(2019, 7, 1), datetime(2019, 9, 30)),  # Pre-breakout
+        # 'Sideways Q2 2021': (datetime(2021, 4, 1), datetime(2021, 6, 30)),  # Post-April 2021 peak
         'Sideways Q1 2020': (datetime(2020, 1, 1), datetime(2020, 3, 31))   # Pre-COVID
     }
     
@@ -45,42 +44,59 @@ def run_market_scenarios():
     
     # Add simulations for each combination
     for market_type, (start_date, end_date) in market_periods.items():
+        print(f"\nProcessing {market_type} from {start_date.date()} to {end_date.date()}")
+        
         for timeframe in timeframes:
             for ema_setting in ema_settings:
                 name = f"{market_type} {timeframe}"
                 if ema_setting['name']:
                     name += f" {ema_setting['name']}"
                 
-                manager.add_simulation(
-                    name=name,
-                    symbol='BTC/USDT',
-                    timeframe=timeframe,
-                    start_date=start_date,
-                    end_date=end_date,
-                    initial_balance=10000,
-                    ema_fast_window=ema_setting['fast'],
-                    ema_slow_window=ema_setting['slow']
-                )
+                try:
+                    manager.add_simulation(
+                        name=name,
+                        symbol='BTC/USDT',
+                        timeframe=timeframe,
+                        start_date=start_date,
+                        end_date=end_date,
+                        initial_balance=10000,
+                        ema_fast_window=ema_setting['fast'],
+                        ema_slow_window=ema_setting['slow']
+                    )
+                    print(f"Added simulation: {name}")
+                except Exception as e:
+                    print(f"Error adding simulation {name}: {str(e)}")
+                    continue
     
-    # Run all simulations
-    manager.run_all_simulations()
-    
-    # Get and display results
-    print("\nBasic Summary:")
-    print(manager.get_summary('basic'))
-    
-    print("\nSorted Summary (sorted by outperformance):")
-    print(manager.get_summary('returns'))
-    
-    # Group results by market type
-    print("\nResults by Market Type:")
-    print("=" * 80)
-    for market_type in ['Bull Market', 'Bear Market', 'High Vol', 'Low Vol', 'Sideways']:
-        print(f"\n{market_type} Periods:")
-        print("-" * 40)
-        # Filter and display results for this market type
-        market_results = manager.get_summary('returns', filter_type=market_type)
-        print(market_results)
+    try:
+        # Run all simulations
+        print("\nRunning simulations...")
+        manager.run_all_simulations()
+        
+        # Get and display results
+        print("\nBasic Summary:")
+        print(manager.get_summary('basic'))
+        
+        print("\nSorted Summary (sorted by outperformance):")
+        returns_summary = manager.get_summary('returns')
+        print(returns_summary)
+        
+        # Group results by market type
+        print("\nResults by Market Type:")
+        print("=" * 80)
+        for market_type in ['Bull Market', 'Bear Market', 'High Vol', 'Low Vol', 'Sideways']:
+            print(f"\n{market_type} Periods:")
+            print("-" * 40)
+            # Filter results for this market type
+            market_results = returns_summary[returns_summary['market_type'].str.startswith(market_type)]
+            if not market_results.empty:
+                print(market_results)
+            else:
+                print(f"No results found for {market_type}")
+        
+    except Exception as e:
+        print(f"Error running simulations: {str(e)}")
+        return None
     
     return manager
 
