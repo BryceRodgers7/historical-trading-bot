@@ -8,12 +8,32 @@ def run_market_scenarios():
     # Create simulation manager
     manager = SimulationManager()
     
-    # Define market periods
+    # Define market periods with multiple examples of each regime
     market_periods = {
-        'Bull Market': (datetime(2023, 1, 1), datetime(2023, 3, 31)),
-        'Bear Market': (datetime(2023, 4, 1), datetime(2023, 6, 30)),
-        'High Volatility': (datetime(2023, 7, 1), datetime(2023, 9, 30)),
-        'Low Volatility': (datetime(2023, 10, 1), datetime(2023, 12, 31))
+        # Bull Markets
+        'Bull Market Q1 2023': (datetime(2023, 1, 1), datetime(2023, 3, 31)),  # Strong uptrend
+        'Bull Market Q4 2020': (datetime(2020, 10, 1), datetime(2020, 12, 31)),  # Post-COVID recovery
+        'Bull Market Q4 2017': (datetime(2017, 10, 1), datetime(2017, 12, 31)),  # Previous cycle peak
+        
+        # Bear Markets
+        'Bear Market Q2 2023': (datetime(2023, 4, 1), datetime(2023, 6, 30)),  # Recent correction
+        'Bear Market Q2 2022': (datetime(2022, 4, 1), datetime(2022, 6, 30)),  # LUNA crash
+        'Bear Market Q1 2018': (datetime(2018, 1, 1), datetime(2018, 3, 31)),  # Post-2017 crash
+        
+        # High Volatility Periods
+        'High Vol Q3 2023': (datetime(2023, 7, 1), datetime(2023, 9, 30)),  # Recent volatility
+        'High Vol Q1 2020': (datetime(2020, 1, 1), datetime(2020, 3, 31)),  # COVID crash
+        'High Vol Q4 2018': (datetime(2018, 10, 1), datetime(2018, 12, 31)),  # End of 2018 bear
+        
+        # Low Volatility Periods
+        'Low Vol Q4 2023': (datetime(2023, 10, 1), datetime(2023, 12, 31)),  # Recent consolidation
+        'Low Vol Q2 2019': (datetime(2019, 4, 1), datetime(2019, 6, 30)),  # Pre-2019 bull
+        'Low Vol Q3 2016': (datetime(2016, 7, 1), datetime(2016, 9, 30)),  # Pre-2017 bull
+        
+        # Sideways/Choppy Markets
+        'Sideways Q3 2019': (datetime(2019, 7, 1), datetime(2019, 9, 30)),  # Pre-breakout
+        'Sideways Q2 2021': (datetime(2021, 4, 1), datetime(2021, 6, 30)),  # Post-April 2021 peak
+        'Sideways Q1 2020': (datetime(2020, 1, 1), datetime(2020, 3, 31))   # Pre-COVID
     }
     
     # Define timeframes and EMA settings to test
@@ -52,9 +72,15 @@ def run_market_scenarios():
     print("\nSorted Summary (sorted by outperformance):")
     print(manager.get_summary('returns'))
     
-    # Plot results
-    # manager.plot_equity_curves()
-    # manager.plot_regime_distribution()
+    # Group results by market type
+    print("\nResults by Market Type:")
+    print("=" * 80)
+    for market_type in ['Bull Market', 'Bear Market', 'High Vol', 'Low Vol', 'Sideways']:
+        print(f"\n{market_type} Periods:")
+        print("-" * 40)
+        # Filter and display results for this market type
+        market_results = manager.get_summary('returns', filter_type=market_type)
+        print(market_results)
     
     return manager
 

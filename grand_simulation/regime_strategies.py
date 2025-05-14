@@ -260,15 +260,6 @@ class ScalpingStrategy(BaseStrategy):
         return df['signal']
 
 class BullRunStrategy(BaseStrategy):
-    """
-    Strategy specifically designed for strong bull markets like Q1 2023.
-    Key characteristics:
-    - Uses multiple EMAs to confirm trend strength
-    - Employs volume-weighted momentum
-    - Implements a trailing stop loss
-    - Uses RSI for overbought/oversold conditions
-    - Requires strong trend confirmation
-    """
     def __init__(self):
         super().__init__()
         self.trailing_stop_pct = 0.05  # 5% trailing stop
@@ -345,14 +336,6 @@ class BullRunStrategy(BaseStrategy):
         return df['signal']
 
 class FibonacciRetracementStrategy(BaseStrategy):
-    """
-    Strategy that uses Fibonacci retracement levels for entry and profit targets.
-    Optimized for Q1 2023 bull market with:
-    - 15-period swing window to catch more opportunities
-    - 1.5% minimum swing to enter on smaller pullbacks
-    - Focus on 0.618 and 0.786 retracement levels
-    - Profit targets at 1.618 extension
-    """
     def __init__(self, swing_window=15, min_swing_pct=0.015):  # Updated default values
         super().__init__()
         self.swing_window = swing_window  # Window to identify swing points
@@ -469,6 +452,7 @@ class RegimeStrategyFactory:
     def get_strategy(regime):
         if regime != MarketRegime.DO_NOTHING.value:
             return TrendFollowingStrategy()
+            # return FibonacciRetracementStrategy()
             # return BullRunStrategy()
             # return TrendFollowingStrategy(ema_short_window, ema_long_window)
         
