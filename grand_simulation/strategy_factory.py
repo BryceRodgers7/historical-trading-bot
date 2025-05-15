@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from market_regime_detector import MarketRegime
+from regime_detector import MarketRegime
 from signal_strategies import (
     TrendFollowingStrategy,
     MeanReversionStrategy,

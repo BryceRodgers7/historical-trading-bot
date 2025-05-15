@@ -103,10 +103,11 @@ class SimulationSummary:
                 
                 # Count regime occurrences
                 regime_counts = result['data']['regime'].value_counts()
+                active_periods = len(result['data']) - regime_counts.get('do_nothing', 0) - regime_counts.get('warm_up', 0)
                 
                 summary[name] = {
-                    'market_type': market_type,
-                    'timeframe': timeframe,
+                    # 'market_type': market_type,
+                    # 'timeframe': timeframe,
                     'ttl_tds': result['performance']['total_trades'],
                     'win_rate': result['performance']['win_rate'],
                     'poss_wins': result['performance']['possible_profitable'],
@@ -123,6 +124,10 @@ class SimulationSummary:
                     'break_pds': regime_counts.get('breakout', 0),
                     'scalp_pds': regime_counts.get('scalping', 0),
                     'noth_pds': regime_counts.get('do_nothing', 0),
+                    'trend_pct': (regime_counts.get('trend_following', 0) / active_periods * 100).round(2),
+                    'merev_pct': (regime_counts.get('mean_reversion', 0) / active_periods * 100).round(2),
+                    'break_pct': (regime_counts.get('breakout', 0) / active_periods * 100).round(2),
+                    'scalp_pct': (regime_counts.get('scalping', 0) / active_periods * 100).round(2)
                 }
         
         # Convert to DataFrame and sort by total return
