@@ -101,3 +101,4 @@ class TechnicalIndicators:
         df = df.copy()
         df['rsi'] = rsi
         return df
+    

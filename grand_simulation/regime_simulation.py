@@ -137,7 +137,8 @@ class RegimeSimulation:
         df = self.technical_indicators.calculate_rsi(df)
         
         # Detect market regimes
-        df['regime'] = self.regime_detector.detect_regime(df)
+        # df['regime'] = self.regime_detector.detect_regime(df)
+        df['regime'] = self.regime_detector.classify_market_regime(df)
         
         # Initialize simulation columns with proper data types
         df['signal'] = pd.Series(0, index=df.index, dtype='int8')

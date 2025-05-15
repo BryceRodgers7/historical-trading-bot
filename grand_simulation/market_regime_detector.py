@@ -87,3 +87,87 @@ class MarketRegimeDetector:
                 df.loc[mask, 'regime'] = MarketRegime.SCALPING.value
         
         return df['regime'] 
+    
+
+    def classify_market_regime(self, df):
+        """
+        Classify market regimes using a more detailed approach
+        
+        Parameters:
+        df (pd.DataFrame): OHLCV data with technical indicators
+        
+        Returns:
+        pd.Series: Market regime labels for each timestamp
+        """
+        # Create a copy to avoid modifying the original
+        df = df.copy()
+        
+        # Initialize regime column with default value
+        df['regime'] = MarketRegime.DO_NOTHING.value
+        
+        # Calculate additional indicators if not present
+        if 'bb_width' not in df.columns:
+            df['bb_width'] = (df['bb_upper'] - df['bb_lower']) / df['bb_mid']
+        
+        # Define regime conditions
+        strong_up = (
+            (df['ema_fast'] > df['ema_slow']) & 
+            (df['adx'] > 25) & 
+            (df['close'] > df['ema_fast'])
+        )
+        
+        weak_up = (
+            (df['ema_fast'] > df['ema_slow']) & 
+            (df['adx'] <= 25)
+        )
+        
+        strong_down = (
+            (df['ema_fast'] < df['ema_slow']) & 
+            (df['adx'] > 25) & 
+            (df['close'] < df['ema_fast'])
+        )
+        
+        weak_down = (
+            (df['ema_fast'] < df['ema_slow']) & 
+            (df['adx'] <= 25)
+        )
+        
+        bullish_breakout = (
+            (df['close'] > df['close'].rolling(20).max()) &
+            (df['volume_spike'])
+        )
+        
+        bearish_breakdown = (
+            (df['close'] < df['close'].rolling(20).min()) &
+            (df['volume_spike'])
+        )
+        
+        bb_narrow = df['bb_width'] < df['bb_width'].rolling(20).mean()
+        choppy_sideways = ~bb_narrow & (df['adx'] < 20)
+        sideways_consolidation = bb_narrow & (df['adx'] < 20)
+        
+        accumulation = (
+            (df['ema_fast'] > df['ema_slow']) &
+            (df['close'] < df['bb_mid']) &
+            (df['adx'] < 20)
+        )
+        
+        distribution = (
+            (df['ema_fast'] < df['ema_slow']) &
+            (df['close'] > df['bb_mid']) &
+            (df['adx'] < 20)
+        )
+        
+        # Map conditions to regime values
+        df.loc[bullish_breakout, 'regime'] = MarketRegime.BREAKOUT.value
+        df.loc[bearish_breakdown, 'regime'] = MarketRegime.BREAKOUT.value
+        df.loc[strong_up, 'regime'] = MarketRegime.TREND_FOLLOWING.value
+        df.loc[weak_up, 'regime'] = MarketRegime.TREND_FOLLOWING.value
+        df.loc[strong_down, 'regime'] = MarketRegime.TREND_FOLLOWING.value
+        df.loc[weak_down, 'regime'] = MarketRegime.TREND_FOLLOWING.value
+        df.loc[accumulation, 'regime'] = MarketRegime.MEAN_REVERSION.value
+        df.loc[distribution, 'regime'] = MarketRegime.MEAN_REVERSION.value
+        df.loc[choppy_sideways, 'regime'] = MarketRegime.SCALPING.value
+        df.loc[sideways_consolidation, 'regime'] = MarketRegime.SCALPING.value
+        
+        return df['regime']
