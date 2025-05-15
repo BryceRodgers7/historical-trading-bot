@@ -7,7 +7,21 @@ class MarketRegime(Enum):
     MEAN_REVERSION = "mean_reversion"
     BREAKOUT = "breakout"
     SCALPING = "scalping"
+
     DO_NOTHING = "do_nothing"
+    WARM_UP = "warm_up"
+
+    BULL_BREAKOUT = "bull_breakout"
+    BEAR_BREAKOUT = "bear_breakout"
+    STRONG_UP = "strong_up"
+    WEAK_UP = "weak_up"
+    STRONG_DOWN = "strong_down"
+    WEAK_DOWN = "weak_down"
+    ACCUMULATION = "accumulation"
+    DISTRIBUTION = "distribution"
+    CHOPPY_SIDEWAYS = "choppy_sideways"
+    SIDEWAYS_CONSOLIDATION = "sideways_consolidation"
+
 
 class MarketRegimeDetector:
     def __init__(self, 
@@ -34,30 +48,40 @@ class MarketRegimeDetector:
         """
         df = data.copy()
         
-        # Calculate trend indicators
-        df['sma'] = df['close'].rolling(window=self.trend_window).mean()
+        # Initialize regime column with DO_NOTHING
+        df['regime'] = MarketRegime.WARM_UP.value
+        
+        # Calculate trend indicators with min_periods to handle warmup
+        df['sma'] = df['close'].rolling(window=self.trend_window, min_periods=self.trend_window).mean()
         df['price_change'] = df['close'].pct_change(self.trend_window)
         
-        # Calculate volatility
+        # Calculate volatility with min_periods
         df['returns'] = df['close'].pct_change()
-        df['volatility'] = df['returns'].rolling(window=self.volatility_window).std()
+        df['volatility'] = df['returns'].rolling(window=self.volatility_window, min_periods=self.volatility_window).std()
         
-        # Calculate range
+        # Calculate range with min_periods
         df['daily_range'] = (df['high'] - df['low']) / df['close']
-        df['range_ma'] = df['daily_range'].rolling(window=self.trend_window).mean()
+        df['range_ma'] = df['daily_range'].rolling(window=self.trend_window, min_periods=self.trend_window).mean()
         
-        # Calculate mean reversion indicators
-        df['zscore'] = (df['close'] - df['sma']) / df['close'].rolling(window=self.trend_window).std()
+        # Calculate mean reversion indicators with min_periods
+        rolling_std = df['close'].rolling(window=self.trend_window, min_periods=self.trend_window).std()
+        df['zscore'] = (df['close'] - df['sma']) / rolling_std
         
-        # Initialize regime column
-        df['regime'] = MarketRegime.DO_NOTHING.value
+        # Create masks for each regime, only where we have enough data
+        valid_data_mask = (
+            df['sma'].notna() & 
+            df['volatility'].notna() & 
+            df['range_ma'].notna() & 
+            df['zscore'].notna() &
+            df['adx'].notna()
+        )
         
-        # Create masks for each regime
-        old_trend_mask = (df['adx'] > self.adx_threshold) & (abs(df['price_change']) > self.range_threshold)
-        trend_mask = (df['adx'] > self.adx_threshold)
-        mean_rev_mask = (df['adx'] < self.adx_threshold) & (abs(df['zscore']) > 2)
-        breakout_mask = (df['volatility'] > self.volatility_threshold) & (abs(df['price_change']) > self.range_threshold * 2)
-        scalping_mask = (df['volatility'] < self.volatility_threshold * 0.5) & (df['adx'] < self.adx_threshold * 0.5)
+        # Create regime masks only where we have valid data
+        old_trend_mask = valid_data_mask & (df['adx'] > self.adx_threshold) & (abs(df['price_change']) > self.range_threshold)
+        trend_mask = valid_data_mask & (df['adx'] > self.adx_threshold)
+        mean_rev_mask = valid_data_mask & (df['adx'] < self.adx_threshold) & (abs(df['zscore']) > 2)
+        breakout_mask = valid_data_mask & (df['volatility'] > self.volatility_threshold) & (abs(df['price_change']) > self.range_threshold * 2)
+        scalping_mask = valid_data_mask & (df['volatility'] < self.volatility_threshold * 0.5) & (df['adx'] < self.adx_threshold * 0.5)
         
         # Create a DataFrame to store regime scores
         regime_scores = pd.DataFrame(index=df.index)
@@ -86,7 +110,7 @@ class MarketRegimeDetector:
             elif regime == 'scalping':
                 df.loc[mask, 'regime'] = MarketRegime.SCALPING.value
         
-        return df['regime'] 
+        return df['regime']
     
 
     def classify_market_regime(self, df):
@@ -159,15 +183,16 @@ class MarketRegimeDetector:
         )
         
         # Map conditions to regime values
-        df.loc[bullish_breakout, 'regime'] = MarketRegime.BREAKOUT.value
-        df.loc[bearish_breakdown, 'regime'] = MarketRegime.BREAKOUT.value
-        df.loc[strong_up, 'regime'] = MarketRegime.TREND_FOLLOWING.value
-        df.loc[weak_up, 'regime'] = MarketRegime.TREND_FOLLOWING.value
-        df.loc[strong_down, 'regime'] = MarketRegime.TREND_FOLLOWING.value
-        df.loc[weak_down, 'regime'] = MarketRegime.TREND_FOLLOWING.value
-        df.loc[accumulation, 'regime'] = MarketRegime.MEAN_REVERSION.value
-        df.loc[distribution, 'regime'] = MarketRegime.MEAN_REVERSION.value
-        df.loc[choppy_sideways, 'regime'] = MarketRegime.SCALPING.value
-        df.loc[sideways_consolidation, 'regime'] = MarketRegime.SCALPING.value
+        df.loc[bullish_breakout, 'regime'] = MarketRegime.BULL_BREAKOUT.value
+        df.loc[bearish_breakdown, 'regime'] = MarketRegime.BEAR_BREAKOUT.value
+        df.loc[strong_up, 'regime'] = MarketRegime.STRONG_UP.value
+        df.loc[weak_up, 'regime'] = MarketRegime.WEAK_UP.value
+        df.loc[strong_down, 'regime'] = MarketRegime.STRONG_DOWN.value
+        df.loc[weak_down, 'regime'] = MarketRegime.WEAK_DOWN.value
+        df.loc[accumulation, 'regime'] = MarketRegime.ACCUMULATION.value
+        df.loc[distribution, 'regime'] = MarketRegime.DISTRIBUTION.value
+        df.loc[choppy_sideways, 'regime'] = MarketRegime.CHOPPY_SIDEWAYS.value
+        df.loc[sideways_consolidation, 'regime'] = MarketRegime.SIDEWAYS_CONSOLIDATION.value
         
         return df['regime']
+    

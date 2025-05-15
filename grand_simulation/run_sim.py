@@ -2,6 +2,7 @@ from datetime import datetime
 import time
 from simulation_manager import SimulationManager
 from performance_tuner import PerformanceTuner
+import matplotlib.pyplot as plt
 
 def run_market_scenarios():
     # Create simulation manager
@@ -74,25 +75,25 @@ def run_market_scenarios():
         manager.run_all_simulations()
         
         # Get and display results
-        print("\nBasic Summary:")
-        print(manager.get_summary('basic'))
+        # print("\nBasic Summary:")
+        # print(manager.get_summary('basic'))
         
         print("\nSorted Summary (sorted by outperformance):")
         returns_summary = manager.get_summary('returns')
         print(returns_summary)
         
         # Group results by market type
-        print("\nResults by Market Type:")
-        print("=" * 80)
-        for market_type in ['Bull Market', 'Bear Market', 'High Vol', 'Low Vol', 'Sideways']:
-            print(f"\n{market_type} Periods:")
-            print("-" * 40)
-            # Filter results for this market type
-            market_results = returns_summary[returns_summary['market_type'].str.startswith(market_type)]
-            if not market_results.empty:
-                print(market_results)
-            else:
-                print(f"No results found for {market_type}")
+        # print("\nResults by Market Type:")
+        # print("=" * 80)
+        # for market_type in ['Bull Market', 'Bear Market', 'High Vol', 'Low Vol', 'Sideways']:
+        #     print(f"\n{market_type} Periods:")
+        #     print("-" * 40)
+        #     # Filter results for this market type
+        #     market_results = returns_summary[returns_summary['market_type'].str.startswith(market_type)]
+        #     if not market_results.empty:
+        #         print(market_results)
+        #     else:
+        #         print(f"No results found for {market_type}")
         
     except Exception as e:
         print(f"Error running simulations: {str(e)}")
