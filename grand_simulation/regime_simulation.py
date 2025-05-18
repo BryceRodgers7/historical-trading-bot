@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from regime_detector import MarketRegimeDetector
+from regime_detection.regime_detector import MarketRegimeDetector
 from strategy_factory import RegimeStrategyFactory
 from technical_indicators import TechnicalIndicators
 
