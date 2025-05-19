@@ -2,12 +2,13 @@ import sys
 import os
 import traceback
 
-from grand_simulation.regime_detection.regime_manager import RegimeManager
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 import pandas as pd
 from datetime import datetime, timedelta
 
+from grand_simulation.regime_detection.regime_manager import RegimeManager
 from grand_simulation.technical_indicators import TechnicalIndicators
 from grand_simulation.binance_api.historical_data import HistoricalDataFetcher
 from grand_simulation.regime_detection.regime_detector import MarketRegimeDetector
@@ -47,7 +48,7 @@ def run_regime_simulations(symbol='BTC/USDT', timeframe='1h', start_date=None, e
         {'name': '', 'fast': 9, 'slow': 21},  # Default settings
         {'name': 'ema20', 'fast': 20, 'slow': 50}  # Alternative settings
     ]
-    lookaheads = [1, 2, 3, 6, 10, 12]
+    lookaheads = [6, 12]
 
     for market_type, (start_date, end_date) in market_periods.items():
         for timeframe in timeframes:
@@ -59,8 +60,9 @@ def run_regime_simulations(symbol='BTC/USDT', timeframe='1h', start_date=None, e
                     if lookahead:
                         name += f" {lookahead} lookahead"
                     try:
+                        print(f"Adding simulation: {name}")
                         regime_manager.add_sim(
-                            name='',
+                            name=name,
                             symbol=symbol,
                             timeframe=timeframe,
                             start_date=start_date,

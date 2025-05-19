@@ -76,6 +76,7 @@ class RegimeManager:
 
             self.sim_parms = config
 
+            print(f"running simulation: {name}")
             sim = RegimeSimulation(name=name, 
                                  symbol=config['symbol'], 
                                  timeframe=config['timeframe'], 
@@ -94,10 +95,8 @@ class RegimeManager:
             
             print(f"Running simulation: {name}")
 
-            results = sim.run_simulation(self.sim_data)
+            results = sim.run_regime_simulation(self.sim_data)
             self.results[name] = {
                 'data': results[0],
-                'trades': results[1],
-                'performance': results[2],
-                'regime_performance': results[3]
+                'performance': results[1]
             }

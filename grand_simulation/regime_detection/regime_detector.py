@@ -130,7 +130,7 @@ class MarketRegimeDetector:
         return df['regime']
 
     # ADVANCED version of above function
-    def classify_market_regime(self, df):
+    def classify_market_regime(self, data):
         """
         Classify market regimes using a more detailed approach
         
@@ -141,7 +141,7 @@ class MarketRegimeDetector:
         pd.Series: Market regime labels for each timestamp
         """
         # Create a copy to avoid modifying the original
-        df = df.copy()
+        df = data.copy()
         
         # Initialize regime column with default value
         df['regime'] = MarketRegime.DO_NOTHING.value
@@ -213,3 +213,63 @@ class MarketRegimeDetector:
         
         return df['regime']
     
+    def predict_next_regime(self, df):
+        """
+        Predict the next market regime using current technical indicators.
+        Uses vectorized operations for efficiency.
+        Skips the first warmup_periods for accurate indicator calculations.
+        
+        Parameters:
+        df (pd.DataFrame): DataFrame with OHLCV and technical indicators
+        
+        Returns:
+        pd.Series: Predicted regime for each row, with 'warm_up' for initial periods
+        """
+        # Initialize regime series with 'warm_up' for warmup periods
+        regime = pd.Series('warm_up', index=df.index)
+        
+        # Only process data after warmup period
+        valid_data = df.iloc[self.warmup_periods:].copy()
+        
+        # Create conditions for each regime
+        uptrend = (
+            (valid_data['ema_fast'] > valid_data['ema_slow']) &  # Fast EMA above slow EMA
+            (valid_data['close'] > valid_data['bb_mid']) &       # Price above BB middle
+            (valid_data['adx'] > 25) &                           # Strong trend
+            (valid_data['rsi'] > 50)                             # Bullish RSI
+        )
+        
+        downtrend = (
+            (valid_data['ema_fast'] < valid_data['ema_slow']) &  # Fast EMA below slow EMA
+            (valid_data['close'] < valid_data['bb_mid']) &       # Price below BB middle
+            (valid_data['adx'] > 25) &                           # Strong trend
+            (valid_data['rsi'] < 50)                             # Bearish RSI
+        )
+        
+        high_volatility = (
+            (valid_data['bb_width'] > valid_data['bb_width'].rolling(20).mean() * 1.5) |  # BB width significantly above average
+            (valid_data['volume_spike'] == True) |                                         # Volume spike
+            (valid_data['volatility_ok'] == False)                                        # High volatility flag
+        )
+        
+        low_volatility = (
+            (valid_data['bb_width'] < valid_data['bb_width'].rolling(20).mean() * 0.75) &  # BB width significantly below average
+            (valid_data['volume_spike'] == False) &                                        # No volume spike
+            (valid_data['volatility_ok'] == True) &                                       # Low volatility flag
+            (valid_data['adx'] < 20)                                                      # Weak trend
+        )
+        
+        # Assign regimes based on conditions
+        valid_mask = pd.Series(False, index=regime.index)
+        valid_mask.iloc[self.warmup_periods:] = True
+        
+        regime.loc[valid_mask & uptrend] = 'uptrend'
+        regime.loc[valid_mask & downtrend] = 'downtrend'
+        regime.loc[valid_mask & high_volatility] = 'high_volatility'
+        regime.loc[valid_mask & low_volatility] = 'low_volatility'
+        
+        # Shift predictions forward by 1 period to predict next regime
+        # Keep 'warm_up' for the last period since we can't predict it
+        regime = regime.shift(-1)
+        regime.iloc[-1] = 'warm_up'  # Last period can't be predicted
+        return regime.fillna('warm_up')
