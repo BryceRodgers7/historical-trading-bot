@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.metrics import confusion_matrix, classification_report
 import matplotlib.pyplot as plt
 import seaborn as sns
-from regime_detector import MarketRegime, MarketRegimeDetector
+from grand_simulation.regime_detection.regime_detector import MarketRegime, MarketRegimeDetector
 
 class RegimeDetectorAssessor:
     def __init__(self, detector=None):
