@@ -1,6 +1,12 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+
 import numpy as np
 import pandas as pd
 from enum import Enum
+
+from grand_simulation.technical_indicators import TechnicalIndicators
 
 class MarketRegime(Enum):
     TREND_FOLLOWING = "trend_following"
@@ -29,12 +35,23 @@ class MarketRegimeDetector:
                  volatility_window=20,
                  adx_threshold=20,
                  range_threshold=0.02,
-                 volatility_threshold=0.015):
+                 volatility_threshold=0.015,
+                 technical_indicators=None):
         self.trend_window = trend_window
         self.volatility_window = volatility_window
         self.adx_threshold = adx_threshold
         self.range_threshold = range_threshold
         self.volatility_threshold = volatility_threshold
+        self.technical_indicators = technical_indicators
+        self.warmup_periods = max(
+            self.trend_window,
+            self.volatility_window,
+            self.technical_indicators.rsi_window,
+            self.technical_indicators.ema_slow_window,
+            self.technical_indicators.bb_window,
+            self.technical_indicators.adx_period
+        )
+    
 
     def detect_regime(self, data):
         """
@@ -111,8 +128,8 @@ class MarketRegimeDetector:
                 df.loc[mask, 'regime'] = MarketRegime.SCALPING.value
         
         return df['regime']
-    
 
+    # ADVANCED version of above function
     def classify_market_regime(self, df):
         """
         Classify market regimes using a more detailed approach

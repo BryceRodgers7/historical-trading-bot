@@ -1,5 +1,8 @@
 import sys
 import os
+import traceback
+
+from grand_simulation.regime_detection.regime_manager import RegimeManager
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 import pandas as pd
@@ -11,86 +14,81 @@ from grand_simulation.regime_detection.regime_detector import MarketRegimeDetect
 import matplotlib.pyplot as plt
 import numpy as np
 
-def assess_regime_detection(symbol='BTC/USDT', timeframe='1h', start_date=None, end_date=None):
-    """
-    Assess regime detection on historical data for a specific period
+def run_regime_simulations(symbol='BTC/USDT', timeframe='1h', start_date=None, end_date=None):
+    # probably want to pass in technical indicators parameters here, or create a simulation manager object similar to the trading sim
+
+    regime_manager = RegimeManager()
+
+    market_periods = {
+        # Bull Markets
+        'Bull Market Q4 2020': (datetime(2020, 10, 1), datetime(2020, 12, 31)),  # Post-COVID recovery
+        # 'Bull Market Q4 2017': (datetime(2017, 10, 1), datetime(2017, 12, 31)),  # Previous cycle peak
+        
+        # # Bear Markets
+        # 'Bear Market Q2 2022': (datetime(2022, 4, 1), datetime(2022, 6, 30)),  # LUNA crash
+        # 'Bear Market Q1 2018': (datetime(2018, 1, 1), datetime(2018, 3, 31)),  # Post-2017 crash
+        
+        # # High Volatility Periods
+        # 'High Vol Q1 2020': (datetime(2020, 1, 1), datetime(2020, 3, 31)),  # COVID crash
+        # 'High Vol Q4 2018': (datetime(2018, 10, 1), datetime(2018, 12, 31)),  # End of 2018 bear
+        
+        # # Low Volatility Periods
+        # 'Low Vol Q2 2019': (datetime(2019, 4, 1), datetime(2019, 6, 30)),  # Pre-2019 bull
+        # 'Low Vol Q3 2016': (datetime(2016, 7, 1), datetime(2016, 9, 30)),  # Pre-2017 bull
+        
+        # Sideways/Choppy Markets
+        # 'Sideways Q3 2019': (datetime(2019, 7, 1), datetime(2019, 9, 30)),  # Pre-breakout
+        'Sideways Q2 2021': (datetime(2021, 4, 1), datetime(2021, 6, 30))   # Post-April 2021 peak
+    }
     
-    Parameters:
-    symbol (str): Trading pair symbol (e.g., 'BTC/USDT')
-    timeframe (str): Candlestick timeframe (e.g., '1h', '4h', '1d')
-    start_date (datetime): Start date for analysis
-    end_date (datetime): End date for analysis
-    
-    Returns:
-    tuple: (validation_df, accuracy_summary, regime_counts)
-    """
-    # Initialize data fetcher and regime detector
-    data_fetcher = HistoricalDataFetcher()
-    detector = MarketRegimeDetector()
-    technical_indicators = TechnicalIndicators()
-    
+    # Define timeframes to analyze
+    timeframes = ['4h', '1h']
+    ema_settings = [
+        {'name': '', 'fast': 9, 'slow': 21},  # Default settings
+        {'name': 'ema20', 'fast': 20, 'slow': 50}  # Alternative settings
+    ]
+    lookaheads = [1, 2, 3, 6, 10, 12]
+
+    for market_type, (start_date, end_date) in market_periods.items():
+        for timeframe in timeframes:
+            for ema_setting in ema_settings:
+                for lookahead in lookaheads:
+                    name = f"{market_type} {timeframe}"
+                    if ema_setting['name']:
+                        name += f" {ema_setting['name']}"
+                    if lookahead:
+                        name += f" {lookahead} lookahead"
+                    try:
+                        regime_manager.add_sim(
+                            name='',
+                            symbol=symbol,
+                            timeframe=timeframe,
+                            start_date=start_date,
+                            end_date=end_date,
+                            lookahead=lookahead,
+                        )
+                    except Exception as e:
+                        print(f"Error adding simulation: {str(e)}")
+                        continue
+
+
+    try:
+        regime_manager.run_all_simulations()
+    except Exception as e:
+        print(f"Error running simulations: {str(e)}")
+        print("\nFull stack trace:")
+        traceback.print_exc()
+        return None
+
     print(f"Fetching historical data for {symbol} from {start_date.date()} to {end_date.date()}")
     
-    # Fetch historical data
-    data = data_fetcher.fetch_historical_data(
-        symbol=symbol,
-        timeframe=timeframe,
-        start_date=start_date,
-        end_date=end_date
-    )
-    
-    print(f"Applying technical indicators")
-    df = data.copy()
-
-    # Calculate technical indicators
-    df = technical_indicators.calculate_emas(df)
-    df = technical_indicators.calculate_adx(df)
-    df = technical_indicators.calculate_bollinger_bands(df)
-    df = technical_indicators.flag_volume_spike(df)
-    df = technical_indicators.check_volatility(df)
-    df = technical_indicators.calculate_rsi(df)
-
-    print(f"Analyzing {len(df)} candles for regime detection")
-    
-    # Detect regimes
-    regime_counts = detector.detect_regime(df)
-    
-    # Validate regime predictions
-    validation_df = detector.validate_regime_prediction(regime_counts)
-    accuracy_summary = detector.get_regime_accuracy_summary(validation_df)
-    regime_counts = data['regime'].value_counts()
-    
-    return validation_df, accuracy_summary, regime_counts
 
 def run_market_periods_analysis():
     """
     Run regime detection analysis across different market periods
     """
     # Define market periods to analyze
-    market_periods = {
-        # Bull Markets
-        'Bull Market Q4 2020': (datetime(2020, 10, 1), datetime(2020, 12, 31)),  # Post-COVID recovery
-        'Bull Market Q4 2017': (datetime(2017, 10, 1), datetime(2017, 12, 31)),  # Previous cycle peak
-        
-        # Bear Markets
-        'Bear Market Q2 2022': (datetime(2022, 4, 1), datetime(2022, 6, 30)),  # LUNA crash
-        'Bear Market Q1 2018': (datetime(2018, 1, 1), datetime(2018, 3, 31)),  # Post-2017 crash
-        
-        # High Volatility Periods
-        'High Vol Q1 2020': (datetime(2020, 1, 1), datetime(2020, 3, 31)),  # COVID crash
-        'High Vol Q4 2018': (datetime(2018, 10, 1), datetime(2018, 12, 31)),  # End of 2018 bear
-        
-        # Low Volatility Periods
-        'Low Vol Q2 2019': (datetime(2019, 4, 1), datetime(2019, 6, 30)),  # Pre-2019 bull
-        'Low Vol Q3 2016': (datetime(2016, 7, 1), datetime(2016, 9, 30)),  # Pre-2017 bull
-        
-        # Sideways/Choppy Markets
-        'Sideways Q3 2019': (datetime(2019, 7, 1), datetime(2019, 9, 30)),  # Pre-breakout
-        'Sideways Q2 2021': (datetime(2021, 4, 1), datetime(2021, 6, 30))   # Post-April 2021 peak
-    }
     
-    # Define timeframes to analyze
-    timeframes = ['4h', '1h', '15m']
     
     # Store results for each period and timeframe
     results = {}
@@ -108,6 +106,7 @@ def run_market_periods_analysis():
             print(f"\nAnalyzing {timeframe} timeframe...")
             
             try:
+                # pass in technical indicators parameters
                 validation_df, accuracy_summary, regime_counts = assess_regime_detection(
                     symbol='BTC/USDT',
                     timeframe=timeframe,
@@ -168,7 +167,7 @@ def run_market_periods_analysis():
 
 if __name__ == "__main__":
     print("Starting regime detection analysis across market periods...")
-    results = run_market_periods_analysis()
+    results = run_regime_simulations()
     
 
     

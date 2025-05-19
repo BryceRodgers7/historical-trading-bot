@@ -4,13 +4,13 @@ from regime_detection.regime_detector import MarketRegimeDetector
 from strategy_factory import RegimeStrategyFactory
 from technical_indicators import TechnicalIndicators
 
-class RegimeSimulation:
+class TradingSimulation:
     def __init__(self, name, symbol, timeframe, start_date, end_date, initial_balance=10000, lookback_window=100, ema_fast_window=9, ema_slow_window=21, bb_window=20, bb_std=2, rsi_window=14,
                  stop_loss_pct=0.02, take_profit_pct=0.1):  
         self.initial_balance = initial_balance
-        self.regime_detector = MarketRegimeDetector()
         self.strategy_factory = RegimeStrategyFactory()
         self.technical_indicators = TechnicalIndicators(adx_period=14, ema_fast_window=ema_fast_window, ema_slow_window=ema_slow_window, bb_window=bb_window, bb_std=bb_std, rsi_window=rsi_window)
+        self.regime_detector = MarketRegimeDetector(technical_indicators=self.technical_indicators)
         self.strategy_parms = {}
         self.name = name
         self.symbol = symbol
@@ -136,7 +136,7 @@ class RegimeSimulation:
         df = self.technical_indicators.check_volatility(df)
         df = self.technical_indicators.calculate_rsi(df)
         
-        # Detect market regimes
+        # Detect market regimes (currently unused)
         df['regime'] = self.regime_detector.detect_regime(df)
         # df['regime'] = self.regime_detector.classify_market_regime(df)
         

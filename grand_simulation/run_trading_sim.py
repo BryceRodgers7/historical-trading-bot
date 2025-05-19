@@ -1,5 +1,6 @@
 from datetime import datetime
 import time
+import traceback
 from simulation_manager import SimulationManager
 from performance_tuner import PerformanceTuner
 import matplotlib.pyplot as plt
@@ -97,9 +98,9 @@ def run_market_scenarios():
         
     except Exception as e:
         print(f"Error running simulations: {str(e)}")
+        print("\nFull stack trace:")
+        traceback.print_exc()
         return None
-    
-    return manager
 
 def run_parameter_optimization():
     """
@@ -195,7 +196,7 @@ if __name__ == "__main__":
     
     # Run market scenarios
     print("Running market scenarios...")
-    manager = run_market_scenarios()
+    run_market_scenarios()
     
     # Run optimization for all market types
     # print("\nRunning parameter optimization for all market types...")
