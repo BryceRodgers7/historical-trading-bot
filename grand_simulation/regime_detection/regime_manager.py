@@ -58,7 +58,12 @@ class RegimeManager:
 
 
     def run_all_simulations(self):
-        """Run all configured simulations and store results"""
+        """
+        Run all configured simulations and store results
+        
+        Returns:
+        dict: Dictionary containing results for all simulations
+        """
         for name, config in self.simulations.items():
             
             # do not re-fetch data if the same symbol, timeframe, start_date, and end_date
@@ -76,7 +81,7 @@ class RegimeManager:
 
             self.sim_parms = config
 
-            print(f"running simulation: {name}")
+            print(f"\nRunning simulation: {name}")
             sim = RegimeSimulation(name=name, 
                                  symbol=config['symbol'], 
                                  timeframe=config['timeframe'], 
@@ -93,10 +98,11 @@ class RegimeManager:
                                  stop_loss_pct=config['stop_loss_pct'],
                                  take_profit_pct=config['take_profit_pct'])
             
-            print(f"Running simulation: {name}")
-
             results = sim.run_regime_simulation(self.sim_data)
             self.results[name] = {
                 'data': results[0],
-                'performance': results[1]
+                'validation': results[1],
+                'config': config
             }
+        
+        return self.results

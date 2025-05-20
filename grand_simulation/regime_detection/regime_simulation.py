@@ -53,52 +53,6 @@ class RegimeSimulation:
         df['predicted_regime'] = self.regime_detector.predict_next_regime(df)
         validation_results = self.validate_regime_prediction(df)
         
-        # Print detailed metrics
-        print(f"\n{'='*80}")
-        print(f"Regime Detection Results for {self.name}")
-        print(f"Period: {self.start_date.strftime('%Y-%m-%d')} to {self.end_date.strftime('%Y-%m-%d')}")
-        print(f"Timeframe: {self.timeframe}")
-        print(f"Lookahead: {self.lookahead} periods")
-        print(f"{'='*80}")
-        
-        # Print overall statistics
-        total_periods = len(df)
-        valid_periods = total_periods - self.warmup_periods - self.lookahead
-        print(f"\nOverall Statistics:")
-        print(f"Total periods: {total_periods}")
-        print(f"Warmup periods: {self.warmup_periods}")
-        print(f"Valid periods for prediction: {valid_periods}")
-        
-        # Print regime distribution
-        print(f"\nRegime Distribution:")
-        regime_counts = df['predicted_regime'].value_counts()
-        for regime, count in regime_counts.items():
-            percentage = round(count / total_periods * 100, 2)
-            print(f"{regime}: {count} periods ({percentage}%)")
-        
-        # Print validation metrics
-        print(f"\nValidation Metrics:")
-        print(validation_results.to_string(index=False))
-        
-        # Calculate and print average metrics
-        avg_accuracy = validation_results['accuracy'].mean()
-        avg_precision = validation_results['precision'].mean()
-        avg_recall = validation_results['recall'].mean()
-        print(f"\nAverage Metrics:")
-        print(f"Average Accuracy: {avg_accuracy:.2%}")
-        print(f"Average Precision: {avg_precision:.2%}")
-        print(f"Average Recall: {avg_recall:.2%}")
-        
-        # Print most accurate regime
-        best_regime = validation_results.loc[validation_results['accuracy'].idxmax()]
-        print(f"\nBest Performing Regime:")
-        print(f"Regime: {best_regime['regime']}")
-        print(f"Accuracy: {best_regime['accuracy']:.2%}")
-        print(f"Total Predictions: {best_regime['total_predictions']}")
-        print(f"Correct Predictions: {best_regime['correct_predictions']}")
-        
-        print(f"\n{'-'*80}\n")
-        
         return df, validation_results
     
     # UNUSED:this needs to be examined more closely
