@@ -38,7 +38,7 @@ def run_regime_simulations(symbol='BTC/USDT', timeframe='1h', start_date=None, e
         'Low Vol Q4 2023': (datetime(2023, 8, 1), datetime(2023, 11, 1)),  
         
         # Sideways/Choppy Markets
-        'Sideways Q3 2019': (datetime(2020, 7, 1), datetime(2020, 10, 1)),  # Pre-breakout
+        'Sideways Q3 2020': (datetime(2020, 7, 1), datetime(2020, 10, 1)),  # Pre-breakout
         'Sideways Q2 2021': (datetime(2021, 4, 1), datetime(2021, 7, 1))   # Post-April 2021 peak
     }
     

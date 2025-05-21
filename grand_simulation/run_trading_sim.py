@@ -12,29 +12,29 @@ def run_market_scenarios():
     # Define market periods with multiple examples of each regime
     market_periods = {
         # Bull Markets
-        # 'Bull Market Q1 2023': (datetime(2023, 1, 1), datetime(2023, 3, 31)),  # Strong uptrend
-        'Bull Market Q4 2020': (datetime(2020, 10, 1), datetime(2020, 12, 31)),  # Post-COVID recovery
-        # 'Bull Market Q4 2017': (datetime(2017, 10, 1), datetime(2017, 12, 31)),  # Previous cycle peak
+        # 'Bull Market Q4 2020': (datetime(2020, 10, 1), datetime(2021, 1, 1)),  # Post-COVID recovery
+        # 'Bull Market Q1 2023': (datetime(2023, 1, 1), datetime(2023, 4, 1)),  # Strong uptrend
+        # 'Bull Market Q4 2023': (datetime(2023, 11, 1), datetime(2024, 2, 1)),  # Previous cycle peak
         
-        # Bear Markets
-        # 'Bear Market Q2 2023': (datetime(2023, 4, 1), datetime(2023, 6, 30)),  # Recent correction
-        # 'Bear Market Q2 2022': (datetime(2022, 4, 1), datetime(2022, 6, 30)),  # LUNA crash
-        # 'Bear Market Q1 2018': (datetime(2018, 1, 1), datetime(2018, 3, 31)),  # Post-2017 crash
+        # # Bear Markets
+        # 'Bear Market Q2 2023': (datetime(2023, 4, 1), datetime(2023, 7, 1)),  # Recent correction
+        # 'Bear Market Q1 2022': (datetime(2022, 1, 1), datetime(2022, 4, 1)),  
         
-        # High Volatility Periods
-        # 'High Vol Q3 2023': (datetime(2023, 7, 1), datetime(2023, 9, 30)),  # Recent volatility
-        # 'High Vol Q1 2020': (datetime(2020, 1, 1), datetime(2020, 3, 31)),  # COVID crash
-        # 'High Vol Q4 2018': (datetime(2018, 10, 1), datetime(2018, 12, 31)),  # End of 2018 bear
+        # # High Volatility Periods
+        'High Vol Q1 2020': (datetime(2020, 1, 1), datetime(2020, 4, 1)),  # COVID crash
+        'High Vol Q3 2021': (datetime(2021, 5, 1), datetime(2021, 8, 1)),
+        # 'High Vol Q3 2023': (datetime(2023, 7, 1), datetime(2023, 10, 1)),  # Recent volatility
         
-        # Low Volatility Periods
-        # 'Low Vol Q4 2023': (datetime(2023, 10, 1), datetime(2023, 12, 31)),  # Recent consolidation
-        # 'Low Vol Q2 2019': (datetime(2019, 4, 1), datetime(2019, 6, 30)),  # Pre-2019 bull
-        # 'Low Vol Q3 2016': (datetime(2016, 7, 1), datetime(2016, 9, 30)),  # Pre-2017 bull
         
-        # Sideways/Choppy Markets
-        # 'Sideways Q3 2019': (datetime(2019, 7, 1), datetime(2019, 9, 30)),  # Pre-breakout
-        # 'Sideways Q2 2021': (datetime(2021, 4, 1), datetime(2021, 6, 30)),  # Post-April 2021 peak
-        'Sideways Q1 2020': (datetime(2020, 1, 1), datetime(2020, 3, 31))   # Pre-COVID
+        # # Low Volatility Periods
+        # 'Low Vol Q4 2023': (datetime(2023, 10, 1), datetime(2024, 1, 1)),  # Recent consolidation
+        # 'Low Vol Q4 2020': (datetime(2020, 9, 1), datetime(2020, 12, 1)),
+        # 'Low Vol Q4 2023': (datetime(2023, 8, 1), datetime(2023, 11, 1)),  
+        
+        # # Sideways/Choppy Markets
+        # 'Sideways Q2 2021': (datetime(2021, 4, 1), datetime(2021, 7, 1)),  # Post-April 2021 peak
+        # 'Sideways Q1 2020': (datetime(2020, 1, 1), datetime(2020, 4, 1)),   # Pre-COVID
+        # 'Sideways Q3 2020': (datetime(2020, 7, 1), datetime(2020, 10, 1)),  # Pre-breakout
     }
     
     # Define timeframes and EMA settings to test
@@ -43,6 +43,10 @@ def run_market_scenarios():
         {'name': '', 'fast': 9, 'slow': 21},  # Default settings
         {'name': 'ema20', 'fast': 20, 'slow': 50}  # Alternative settings
     ]
+    
+    # Define support and resistance levels as simple lists
+    support_levels = [4000, 10000, 12000, 30000, 40000]
+    resistance_levels = [12000, 19500, 42000, 52000, 64000, 69000]
     
     # Add simulations for each combination
     for market_type, (start_date, end_date) in market_periods.items():
@@ -63,7 +67,9 @@ def run_market_scenarios():
                         end_date=end_date,
                         initial_balance=10000,
                         ema_fast_window=ema_setting['fast'],
-                        ema_slow_window=ema_setting['slow']
+                        ema_slow_window=ema_setting['slow'],
+                        support_levels=support_levels,
+                        resistance_levels=resistance_levels
                     )
                     print(f"Added simulation: {name}")
                 except Exception as e:

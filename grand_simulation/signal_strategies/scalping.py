@@ -51,22 +51,22 @@ class ScalpingStrategy(BaseStrategy):
         
         return df['signal'] 
     
-        def OLD_generate_signals(self, data):
-            df = data.copy()
-            # Calculate fast and slow EMAs
-            df['EMA_fast'] = df['close'].ewm(span=self.short_window, adjust=False).mean()
-            df['EMA_slow'] = df['close'].ewm(span=self.long_window, adjust=False).mean()
-            
-            # Calculate price momentum
-            df['momentum'] = df['close'].pct_change(self.short_window)
-            
-            # Generate signals
-            df['signal'] = 0
-            
-            # Buy when fast EMA crosses above slow EMA and momentum is positive
-            df.loc[(df['EMA_fast'] > df['EMA_slow']) & (df['momentum'] > 0), 'signal'] = 1
-            
-            # Sell when fast EMA crosses below slow EMA and momentum is negative
-            df.loc[(df['EMA_fast'] < df['EMA_slow']) & (df['momentum'] < 0), 'signal'] = -1
-            
-            return df['signal']
+    def OLD_generate_signals(self, data):
+        df = data.copy()
+        # Calculate fast and slow EMAs
+        df['EMA_fast'] = df['close'].ewm(span=self.short_window, adjust=False).mean()
+        df['EMA_slow'] = df['close'].ewm(span=self.long_window, adjust=False).mean()
+        
+        # Calculate price momentum
+        df['momentum'] = df['close'].pct_change(self.short_window)
+        
+        # Generate signals
+        df['signal'] = 0
+        
+        # Buy when fast EMA crosses above slow EMA and momentum is positive
+        df.loc[(df['EMA_fast'] > df['EMA_slow']) & (df['momentum'] > 0), 'signal'] = 1
+        
+        # Sell when fast EMA crosses below slow EMA and momentum is negative
+        df.loc[(df['EMA_fast'] < df['EMA_slow']) & (df['momentum'] < 0), 'signal'] = -1
+        
+        return df['signal']

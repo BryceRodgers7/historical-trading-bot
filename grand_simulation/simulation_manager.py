@@ -15,7 +15,8 @@ class SimulationManager:
         
     def add_simulation(self, name, symbol, timeframe, start_date, end_date, initial_balance=10000, 
                        ema_fast_window=9, ema_slow_window=21, bb_window=20, bb_std=2, rsi_window=14, 
-                       lookback_window=100, stop_loss_pct=0.02, take_profit_pct=0.04):
+                       lookback_window=100, stop_loss_pct=0.02, take_profit_pct=0.04, 
+                       support_levels=None, resistance_levels=None):
         """
         Add a new simulation scenario
         
@@ -34,6 +35,8 @@ class SimulationManager:
         lookback_window (int): Window size for lookback calculations
         stop_loss_pct (float): Stop loss percentage (e.g., 0.02 for 2%)
         take_profit_pct (float): Take profit percentage (e.g., 0.04 for 4%)
+        support_levels (list): List of support price levels
+        resistance_levels (list): List of resistance price levels
         """
         # Convert string dates to datetime if needed
         if isinstance(start_date, str):
@@ -54,7 +57,9 @@ class SimulationManager:
             'lookback_window': lookback_window,
             'rsi_window': rsi_window,
             'stop_loss_pct': stop_loss_pct,
-            'take_profit_pct': take_profit_pct
+            'take_profit_pct': take_profit_pct,
+            'support_levels': support_levels or [],
+            'resistance_levels': resistance_levels or []
         }
     
     def run_all_simulations(self):
@@ -89,7 +94,9 @@ class SimulationManager:
                                  rsi_window=config['rsi_window'],
                                  lookback_window=config['lookback_window'],
                                  stop_loss_pct=config['stop_loss_pct'],
-                                 take_profit_pct=config['take_profit_pct'])
+                                 take_profit_pct=config['take_profit_pct'],
+                                 support_levels=config['support_levels'],
+                                 resistance_levels=config['resistance_levels'])
             
             print(f"Running simulation: {name}")
 

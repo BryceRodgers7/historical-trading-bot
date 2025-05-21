@@ -1,15 +1,19 @@
 import pandas as pd
 import numpy as np
-from regime_detection.regime_detector import MarketRegimeDetector
+from grand_simulation.signal_strategies.support_resistance_strategy import SupportResistanceStrategy
+from regime_detection.regime_detector import MarketRegime, MarketRegimeDetector
 from strategy_factory import RegimeStrategyFactory
 from technical_indicators import TechnicalIndicators
 
 class TradingSimulation:
-    def __init__(self, name, symbol, timeframe, start_date, end_date, initial_balance=10000, lookback_window=100, ema_fast_window=9, ema_slow_window=21, bb_window=20, bb_std=2, rsi_window=14,
-                 stop_loss_pct=0.02, take_profit_pct=0.1):  
+    def __init__(self, name, symbol, timeframe, start_date, end_date, initial_balance=10000, lookback_window=100, 
+                 ema_fast_window=9, ema_slow_window=21, bb_window=20, bb_std=2, rsi_window=14,
+                 stop_loss_pct=0.02, take_profit_pct=0.1, support_levels=None, resistance_levels=None):  
         self.initial_balance = initial_balance
         self.strategy_factory = RegimeStrategyFactory()
-        self.technical_indicators = TechnicalIndicators(adx_period=14, ema_fast_window=ema_fast_window, ema_slow_window=ema_slow_window, bb_window=bb_window, bb_std=bb_std, rsi_window=rsi_window)
+        self.technical_indicators = TechnicalIndicators(adx_period=14, ema_fast_window=ema_fast_window, 
+                                                      ema_slow_window=ema_slow_window, bb_window=bb_window, 
+                                                      bb_std=bb_std, rsi_window=rsi_window)
         self.regime_detector = MarketRegimeDetector(technical_indicators=self.technical_indicators)
         self.strategy_parms = {}
         self.name = name
@@ -20,6 +24,8 @@ class TradingSimulation:
         self.lookback_window = lookback_window
         self.stop_loss_pct = stop_loss_pct
         self.take_profit_pct = take_profit_pct
+        self.support_levels = support_levels or []
+        self.resistance_levels = resistance_levels or []
         self.warmup_periods = max(
             self.regime_detector.trend_window,
             self.regime_detector.volatility_window,
@@ -136,7 +142,7 @@ class TradingSimulation:
         df = self.technical_indicators.check_volatility(df)
         df = self.technical_indicators.calculate_rsi(df)
         
-        # Detect market regimes (currently unused)
+        # Detect market regimes (currently not doing much)
         df['regime'] = self.regime_detector.detect_regime(df)
         # df['regime'] = self.regime_detector.classify_market_regime(df)
         
@@ -157,8 +163,12 @@ class TradingSimulation:
         for i in range(self.warmup_periods, len(df)):
             # Get current regime and strategy
             current_regime = df['regime'].iloc[i]
-            strategy = self.strategy_factory.get_strategy(current_regime)
             
+            # REGIME OVERRIDE
+            regime = MarketRegime.TREND_FOLLOWING.value
+
+            strategy = self.strategy_factory.get_strategy(current_regime, self.support_levels, self.resistance_levels)
+
             # Generate signals if we have a strategy
             if strategy:
                 # Get signals for the current window of data

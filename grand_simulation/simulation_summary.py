@@ -2,6 +2,12 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+# Set pandas display options to show all rows
+pd.set_option('display.max_rows', None)
+pd.set_option('display.max_columns', None)
+pd.set_option('display.width', None)
+pd.set_option('display.max_colwidth', None)
+
 class SimulationSummary:
     def __init__(self, results):
         """
@@ -85,7 +91,7 @@ class SimulationSummary:
         Get summary sorted by total returns
         
         Returns:
-        pd.DataFrame: Summary DataFrame sorted by total returns
+        pd.DataFrame: Summary DataFrame sorted by total returns with all rows displayed
         """
         summary = {}
         for name, result in self.results.items():
@@ -132,6 +138,12 @@ class SimulationSummary:
         
         # Convert to DataFrame and sort by total return
         df = pd.DataFrame(summary).T
+        
+        # Format numeric columns to 2 decimal places
+        numeric_cols = ['win_rate', 'total_return', 'hodl_return', 'outperform', 
+                       'trend_pct', 'merev_pct', 'break_pct', 'scalp_pct']
+        df[numeric_cols] = df[numeric_cols].round(2)
+        
         return df.sort_values('outperform', ascending=False)
     
     def get_timeframe_comparison(self):
