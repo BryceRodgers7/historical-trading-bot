@@ -76,7 +76,7 @@ class SupportResistanceStrategy:
             return nearest_resistance, 'resistance'
         return None
     
-    def _check_bounce(self, data: pd.DataFrame, level: float, level_type: str, current_idx: int) -> bool:
+    def _check_bounce(self, data, level, level_type, current_idx: int) -> bool:
         """
         Check if price has bounced off a level
         
@@ -114,48 +114,92 @@ class SupportResistanceStrategy:
         
         return False
     
-    def generate_signals(self, data: pd.DataFrame) -> pd.DataFrame:
+    def _is_support_bounce(self, df, support_level, tolerance_pct=0.005):
         """
-        Generate trading signals based on price interaction with levels
+        Check if the most recent candle shows a confirmed bounce off support.
         
         Parameters:
-        data (pd.DataFrame): Price data with 'close' column
+        df (pd.DataFrame): The last 'window' of data before the current candle
+        support_level (float): The support price level to check
+        tolerance_pct (float): Percentage tolerance for considering price near level
         
         Returns:
-        pd.DataFrame: DataFrame with added 'signal' column containing:
-            - 0: No action
-            - 1: Buy signal
-            - -1: Sell signal
+        bool: True if a bounce off support is confirmed
         """
-        df = data.copy()
-        df['signal'] = 0  # Initialize signal column with zeros
+        # Define conditions for the most recent candle
+        latest = df.iloc[-1]
+        prev_rsi = df['rsi'].iloc[-2] if len(df) >= 2 else np.nan
+
+        near_support = (support_level * (1 - tolerance_pct)) <= latest['low'] <= (support_level * (1 + tolerance_pct))
+        bullish_candle = latest['close'] > latest['open']
+        rsi_rising = latest['rsi'] > prev_rsi
+        volume_spike = latest['volume_spike']
+
+        return all([near_support, bullish_candle, rsi_rising, volume_spike])
+    
+    def _is_resistance_bounce(self, df, resistance_level, tolerance_pct=0.005):
+        """
+        Check if the most recent candle shows a confirmed bounce off resistance.
         
-        # Need at least 3 candles for signal generation
-        if len(df) < 3:
-            return df
-            
-        for current_idx in range(2, len(df)):
-            # Check if enough time has passed since last signal
-            if self.last_signal_candle is not None:
-                candles_since_last = current_idx - self.last_signal_candle
-                if candles_since_last < self.min_candles_between_signals:
-                    continue
-            
-            current_price = df['close'].iloc[current_idx]
-            nearest_level = self._find_nearest_level(current_price)
-            
-            if nearest_level is None:
-                continue
-            
-            level_price, level_type = nearest_level
-            
-            # Check for bounce
-            if self._check_bounce(df, level_price, level_type, current_idx):
-                signal = 1 if level_type == 'support' else -1
-                df.loc[df.index[current_idx], 'signal'] = signal
-                self.last_signal_candle = current_idx
+        Parameters:
+        df (pd.DataFrame): The last 'window' of data before the current candle
+        resistance_level (float): The resistance price level to check
+        tolerance_pct (float): Percentage tolerance for considering price near level
         
-        return df['signal']
+        Returns:
+        bool: True if a bounce off resistance is confirmed
+        """
+        # Define conditions for the most recent candle
+        latest = df.iloc[-1]
+        prev_rsi = df['rsi'].iloc[-2] if len(df) >= 2 else np.nan
+
+        near_resistance = (resistance_level * (1 - tolerance_pct)) <= latest['high'] <= (resistance_level * (1 + tolerance_pct))
+        bearish_candle = latest['close'] < latest['open']
+        rsi_falling = latest['rsi'] < prev_rsi
+        volume_spike = latest['volume_spike']
+
+        return all([near_resistance, bearish_candle, rsi_falling, volume_spike])
+    
+    def generate_signals(self, df):
+        """
+        Generate trading signal for the most recent candle based on the nearest support or resistance level.
+        
+        Parameters:
+        df (pd.DataFrame): Price data with at least 2 candles for RSI comparison
+        
+        Returns:
+        int: Signal value:
+            - 0: No action
+            - 1: Buy signal (bounce off support)
+            - -1: Sell signal (bounce off resistance)
+        """
+        # Need at least 2 candles for RSI comparison
+        if len(df) < 2:
+            return 0
+            
+        # Get current price and check if enough time has passed since last signal
+        current_price = df['close'].iloc[-1]
+        # if self.last_signal_candle is not None:
+        #     candles_since_last = len(df) - 1 - self.last_signal_candle
+        #     if candles_since_last < self.min_candles_between_signals:
+        #         return 0
+        
+        # Find nearest level
+        nearest_level = self._find_nearest_level(current_price)
+        if nearest_level is None:
+            return 0
+            
+        level_price, level_type = nearest_level
+        
+        # Check for bounce based on level type
+        if level_type == 'support' and self._is_support_bounce(df, level_price):
+            # self.last_signal_candle = len(df) - 1
+            return 1
+        elif level_type == 'resistance' and self._is_resistance_bounce(df, level_price):
+            # self.last_signal_candle = len(df) - 1
+            return -1
+            
+        return 0
     
     def get_strategy_info(self) -> Dict:
         """

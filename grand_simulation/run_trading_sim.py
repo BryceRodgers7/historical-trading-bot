@@ -21,8 +21,8 @@ def run_market_scenarios():
         # 'Bear Market Q1 2022': (datetime(2022, 1, 1), datetime(2022, 4, 1)),  
         
         # # High Volatility Periods
-        'High Vol Q1 2020': (datetime(2020, 1, 1), datetime(2020, 4, 1)),  # COVID crash
-        'High Vol Q3 2021': (datetime(2021, 5, 1), datetime(2021, 8, 1)),
+        # 'High Vol Q1 2020': (datetime(2020, 1, 1), datetime(2020, 4, 1)),  # COVID crash
+        # 'High Vol Q3 2021': (datetime(2021, 5, 1), datetime(2021, 8, 1)),
         # 'High Vol Q3 2023': (datetime(2023, 7, 1), datetime(2023, 10, 1)),  # Recent volatility
         
         
@@ -35,6 +35,10 @@ def run_market_scenarios():
         # 'Sideways Q2 2021': (datetime(2021, 4, 1), datetime(2021, 7, 1)),  # Post-April 2021 peak
         # 'Sideways Q1 2020': (datetime(2020, 1, 1), datetime(2020, 4, 1)),   # Pre-COVID
         # 'Sideways Q3 2020': (datetime(2020, 7, 1), datetime(2020, 10, 1)),  # Pre-breakout
+
+        # # Support/Resistance Markets
+        'Support/Resistance Q1 2020': (datetime(2024, 1, 1), datetime(2025, 1, 1)),  # Pre-COVID
+        'Support/Resistance Q1 2023': (datetime(2023, 3, 1), datetime(2024, 1, 1)),  # Recent consolidation
     }
     
     # Define timeframes and EMA settings to test

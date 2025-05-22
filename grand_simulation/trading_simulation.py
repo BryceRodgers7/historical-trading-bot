@@ -173,8 +173,10 @@ class TradingSimulation:
             if strategy:
                 # Get signals for the current window of data
                 window_data = df.iloc[max(0, i-self.lookback_window):i+1]
-                signals = strategy.generate_signals(window_data)
-                df.loc[df.index[i], 'signal'] = signals.iloc[-1]
+                signal = strategy.generate_signals(window_data)
+                df.loc[df.index[i], 'signal'] = signal  # signal is now an int (1, 0, or -1)
+            else:
+                raise ValueError(f"No strategy found for regime: {current_regime}")
             
             # Update position based on signal
             current_position, entry_price, entry_time = self._update_position(

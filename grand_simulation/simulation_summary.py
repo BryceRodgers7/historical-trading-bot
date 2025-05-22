@@ -44,34 +44,40 @@ class SimulationSummary:
         """
         summary = {}
         for name, result in self.results.items():
-            if result['performance']:  # If simulation had trades
-                # Calculate buy & hold return
-                buy_hold_return = self._calculate_buy_hold_return(result['data'])
-                
-                # Count exit causes
+            # Calculate buy & hold return
+            buy_hold_return = self._calculate_buy_hold_return(result['data'])
+            
+            # Count regime occurrences
+            regime_counts = result['data']['regime'].value_counts()
+            
+            # Initialize summary with default values
+            summary[name] = {
+                'ttl_trades': 0,
+                'win_rate': 0.0,
+                'poss_wins': 0,
+                'total_return': 0.0,
+                'hodl_return': buy_hold_return,
+                'outperform': -buy_hold_return,  # Negative of buy & hold return when no trades
+                'warmup_pds': regime_counts.get('warm_up', 0),
+                'trend_pds': regime_counts.get('trend_following', 0),
+                'merev_pds': regime_counts.get('mean_reversion', 0),
+                'break_pds': regime_counts.get('breakout', 0),
+                'scalp_pds': regime_counts.get('scalping', 0),
+                'noth_pds': regime_counts.get('do_nothing', 0),
+            }
+            
+            # Update with actual performance if there were trades
+            if result['performance']:
                 trades_df = result['trades']
                 exit_causes = trades_df['exit_reason'].value_counts()
                 
-                # Count regime occurrences
-                regime_counts = result['data']['regime'].value_counts()
-                
-                summary[name] = {
+                summary[name].update({
                     'ttl_trades': result['performance']['total_trades'],
                     'win_rate': result['performance']['win_rate'],
                     'poss_wins': result['performance']['possible_profitable'],
                     'total_return': result['performance']['total_return'],
-                    'hodl_return': buy_hold_return,
                     'outperform': result['performance']['total_return'] - buy_hold_return,
-                    # 'tp_exits': exit_causes.get('take_profit', 0),
-                    # 'sl_exits': exit_causes.get('stop_loss', 0),
-                    # 'signal_exits': exit_causes.get('signal', 0),
-                    'warmup_pds': regime_counts.get('warm_up', 0),
-                    'trend_pds': regime_counts.get('trend_following', 0),
-                    'merev_pds': regime_counts.get('mean_reversion', 0),
-                    'break_pds': regime_counts.get('breakout', 0),
-                    'scalp_pds': regime_counts.get('scalping', 0),
-                    'noth_pds': regime_counts.get('do_nothing', 0),
-                }
+                })
                 
                 # Add regime-specific performance
                 if not result['regime_performance'].empty:
@@ -95,46 +101,56 @@ class SimulationSummary:
         """
         summary = {}
         for name, result in self.results.items():
-            if result['performance']:  # If simulation had trades
-                # Calculate buy & hold return
-                buy_hold_return = self._calculate_buy_hold_return(result['data'])
-                
-                # Extract timeframe from name (assuming format "Market Type Timeframe")
-                timeframe = name.split()[-1] if len(name.split()) > 2 else 'unknown'
-                market_type = ' '.join(name.split()[:-1]) if len(name.split()) > 2 else name
-                
-                # Count exit causes
+            # Calculate buy & hold return
+            buy_hold_return = self._calculate_buy_hold_return(result['data'])
+            
+            # Extract timeframe from name (assuming format "Market Type Timeframe")
+            timeframe = name.split()[-1] if len(name.split()) > 2 else 'unknown'
+            market_type = ' '.join(name.split()[:-1]) if len(name.split()) > 2 else name
+            
+            # Count regime occurrences
+            regime_counts = result['data']['regime'].value_counts()
+            active_periods = len(result['data']) - regime_counts.get('do_nothing', 0) - regime_counts.get('warm_up', 0)
+            
+            # Initialize summary with default values
+            summary[name] = {
+                # 'market_type': market_type,
+                # 'timeframe': timeframe,
+                'ttl_tds': 0,
+                'win_rate': 0.0,
+                'poss_wins': 0,
+                'trade_pds': result['performance'].get('trading_periods', 0) if result['performance'] else 0,
+                'total_return': 0.0,
+                'hodl_return': buy_hold_return,
+                'outperform': -buy_hold_return,  # Negative of buy & hold return when no trades
+                # 'tp_exits': exit_causes.get('take_profit', 0),
+                # 'sl_exits': exit_causes.get('stop_loss', 0),
+                # 'signal_exits': exit_causes.get('signal', 0),
+                'warmup_pds': regime_counts.get('warm_up', 0),
+                'trend_pds': regime_counts.get('trend_following', 0),
+                'merev_pds': regime_counts.get('mean_reversion', 0),
+                'break_pds': regime_counts.get('breakout', 0),
+                'scalp_pds': regime_counts.get('scalping', 0),
+                'noth_pds': regime_counts.get('do_nothing', 0),
+                'trend_pct': (regime_counts.get('trend_following', 0) / active_periods * 100).round(2) if active_periods > 0 else 0.0,
+                'merev_pct': (regime_counts.get('mean_reversion', 0) / active_periods * 100).round(2) if active_periods > 0 else 0.0,
+                'break_pct': (regime_counts.get('breakout', 0) / active_periods * 100).round(2) if active_periods > 0 else 0.0,
+                'scalp_pct': (regime_counts.get('scalping', 0) / active_periods * 100).round(2) if active_periods > 0 else 0.0
+            }
+            
+            # Update with actual performance if there were trades
+            if result['performance']:
                 trades_df = result['trades']
                 exit_causes = trades_df['exit_reason'].value_counts()
                 
-                # Count regime occurrences
-                regime_counts = result['data']['regime'].value_counts()
-                active_periods = len(result['data']) - regime_counts.get('do_nothing', 0) - regime_counts.get('warm_up', 0)
-                
-                summary[name] = {
-                    # 'market_type': market_type,
-                    # 'timeframe': timeframe,
+                summary[name].update({
                     'ttl_tds': result['performance']['total_trades'],
                     'win_rate': result['performance']['win_rate'],
                     'poss_wins': result['performance']['possible_profitable'],
                     'trade_pds': result['performance']['trading_periods'],
                     'total_return': result['performance']['total_return'],
-                    'hodl_return': buy_hold_return,
                     'outperform': result['performance']['total_return'] - buy_hold_return,
-                    # 'tp_exits': exit_causes.get('take_profit', 0),
-                    # 'sl_exits': exit_causes.get('stop_loss', 0),
-                    # 'signal_exits': exit_causes.get('signal', 0),
-                    'warmup_pds': regime_counts.get('warm_up', 0),
-                    'trend_pds': regime_counts.get('trend_following', 0),
-                    'merev_pds': regime_counts.get('mean_reversion', 0),
-                    'break_pds': regime_counts.get('breakout', 0),
-                    'scalp_pds': regime_counts.get('scalping', 0),
-                    'noth_pds': regime_counts.get('do_nothing', 0),
-                    'trend_pct': (regime_counts.get('trend_following', 0) / active_periods * 100).round(2),
-                    'merev_pct': (regime_counts.get('mean_reversion', 0) / active_periods * 100).round(2),
-                    'break_pct': (regime_counts.get('breakout', 0) / active_periods * 100).round(2),
-                    'scalp_pct': (regime_counts.get('scalping', 0) / active_periods * 100).round(2)
-                }
+                })
         
         # Convert to DataFrame and sort by total return
         df = pd.DataFrame(summary).T
