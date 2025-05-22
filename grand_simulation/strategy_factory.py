@@ -14,10 +14,10 @@ from grand_simulation.signal_strategies.support_resistance_strategy import Suppo
 class RegimeStrategyFactory:
     @staticmethod
     # def get_strategy(regime, ema_short_window=9, ema_long_window=21):
-    def get_strategy(regime, support_levels=None, resistance_levels=None):
+    def get_strategy(regime, sup_res_levels=None):
         if regime != MarketRegime.DO_NOTHING.value:
             # return TrendFollowingStrategy()
-            return SupportResistanceStrategy(support_levels=support_levels, resistance_levels=resistance_levels)
+            return SupportResistanceStrategy(price_levels=sup_res_levels)
         #     # return FibonacciRetracementStrategy()
         #     # return BullRunStrategy()
         #     # return TrendFollowingStrategy(ema_short_window, ema_long_window)

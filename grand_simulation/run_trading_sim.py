@@ -37,20 +37,19 @@ def run_market_scenarios():
         # 'Sideways Q3 2020': (datetime(2020, 7, 1), datetime(2020, 10, 1)),  # Pre-breakout
 
         # # Support/Resistance Markets
-        'Support/Resistance Q1 2020': (datetime(2024, 1, 1), datetime(2025, 1, 1)),  # Pre-COVID
-        'Support/Resistance Q1 2023': (datetime(2023, 3, 1), datetime(2024, 1, 1)),  # Recent consolidation
+        'Sup/Res 2024': (datetime(2024, 1, 1), datetime(2025, 1, 1)),  # Pre-COVID
+        'Sup/Res 2023': (datetime(2023, 3, 1), datetime(2024, 1, 1)),  # Recent consolidation
     }
     
     # Define timeframes and EMA settings to test
-    timeframes = ['4h', '1h', '15m']
+    timeframes = ['1d', '4h', '1h', '15m']
     ema_settings = [
-        {'name': '', 'fast': 9, 'slow': 21},  # Default settings
+        # {'name': '', 'fast': 9, 'slow': 21},  # Default settings
         {'name': 'ema20', 'fast': 20, 'slow': 50}  # Alternative settings
     ]
     
     # Define support and resistance levels as simple lists
-    support_levels = [4000, 10000, 12000, 30000, 40000]
-    resistance_levels = [12000, 19500, 42000, 52000, 64000, 69000]
+    sup_res_levels = [17200, 21400, 24800, 28300, 30300, 36000, 40000, 43800, 47000, 52400, 62000, 70000, 77000, 85500, 92000, 98000, 104000]
     
     # Add simulations for each combination
     for market_type, (start_date, end_date) in market_periods.items():
@@ -72,8 +71,7 @@ def run_market_scenarios():
                         initial_balance=10000,
                         ema_fast_window=ema_setting['fast'],
                         ema_slow_window=ema_setting['slow'],
-                        support_levels=support_levels,
-                        resistance_levels=resistance_levels
+                        sup_res_levels=sup_res_levels
                     )
                     print(f"Added simulation: {name}")
                 except Exception as e:

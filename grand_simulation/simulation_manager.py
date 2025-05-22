@@ -16,7 +16,7 @@ class SimulationManager:
     def add_simulation(self, name, symbol, timeframe, start_date, end_date, initial_balance=10000, 
                        ema_fast_window=9, ema_slow_window=21, bb_window=20, bb_std=2, rsi_window=14, 
                        lookback_window=100, stop_loss_pct=0.02, take_profit_pct=0.04, 
-                       support_levels=None, resistance_levels=None):
+                       sup_res_levels=None):
         """
         Add a new simulation scenario
         
@@ -58,8 +58,7 @@ class SimulationManager:
             'rsi_window': rsi_window,
             'stop_loss_pct': stop_loss_pct,
             'take_profit_pct': take_profit_pct,
-            'support_levels': support_levels or [],
-            'resistance_levels': resistance_levels or []
+            'sup_res_levels': sup_res_levels or []
         }
     
     def run_all_simulations(self):
@@ -95,10 +94,9 @@ class SimulationManager:
                                  lookback_window=config['lookback_window'],
                                  stop_loss_pct=config['stop_loss_pct'],
                                  take_profit_pct=config['take_profit_pct'],
-                                 support_levels=config['support_levels'],
-                                 resistance_levels=config['resistance_levels'])
+                                 sup_res_levels=config['sup_res_levels'])
             
-            print(f"Running simulation: {name}")
+            # print(f"Running simulation: {name}")
 
             results = sim.run_simulation(self.sim_data)
             self.results[name] = {

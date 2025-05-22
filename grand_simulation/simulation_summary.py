@@ -50,6 +50,9 @@ class SimulationSummary:
             # Count regime occurrences
             regime_counts = result['data']['regime'].value_counts()
             
+            # Get actual warmup periods from performance metrics
+            warmup_periods = result['performance'].get('warmup_periods', 0) if result['performance'] else 0
+            
             # Initialize summary with default values
             summary[name] = {
                 'ttl_trades': 0,
@@ -58,7 +61,7 @@ class SimulationSummary:
                 'total_return': 0.0,
                 'hodl_return': buy_hold_return,
                 'outperform': -buy_hold_return,  # Negative of buy & hold return when no trades
-                'warmup_pds': regime_counts.get('warm_up', 0),
+                'warmup_pds': warmup_periods,  # Use actual warmup periods from simulation
                 'trend_pds': regime_counts.get('trend_following', 0),
                 'merev_pds': regime_counts.get('mean_reversion', 0),
                 'break_pds': regime_counts.get('breakout', 0),
@@ -110,12 +113,14 @@ class SimulationSummary:
             
             # Count regime occurrences
             regime_counts = result['data']['regime'].value_counts()
-            active_periods = len(result['data']) - regime_counts.get('do_nothing', 0) - regime_counts.get('warm_up', 0)
+
+            # Get actual warmup periods from performance metrics
+            warmup_periods = result['performance'].get('warmup_periods', 0) if result['performance'] else 0
+
+            active_periods = len(result['data']) - regime_counts.get('do_nothing', 0) - warmup_periods           
             
             # Initialize summary with default values
             summary[name] = {
-                # 'market_type': market_type,
-                # 'timeframe': timeframe,
                 'ttl_tds': 0,
                 'win_rate': 0.0,
                 'poss_wins': 0,
@@ -123,19 +128,16 @@ class SimulationSummary:
                 'total_return': 0.0,
                 'hodl_return': buy_hold_return,
                 'outperform': -buy_hold_return,  # Negative of buy & hold return when no trades
-                # 'tp_exits': exit_causes.get('take_profit', 0),
-                # 'sl_exits': exit_causes.get('stop_loss', 0),
-                # 'signal_exits': exit_causes.get('signal', 0),
-                'warmup_pds': regime_counts.get('warm_up', 0),
+                'warmup_pds': warmup_periods,  # Use actual warmup periods from simulation
                 'trend_pds': regime_counts.get('trend_following', 0),
                 'merev_pds': regime_counts.get('mean_reversion', 0),
                 'break_pds': regime_counts.get('breakout', 0),
                 'scalp_pds': regime_counts.get('scalping', 0),
                 'noth_pds': regime_counts.get('do_nothing', 0),
-                'trend_pct': (regime_counts.get('trend_following', 0) / active_periods * 100).round(2) if active_periods > 0 else 0.0,
-                'merev_pct': (regime_counts.get('mean_reversion', 0) / active_periods * 100).round(2) if active_periods > 0 else 0.0,
-                'break_pct': (regime_counts.get('breakout', 0) / active_periods * 100).round(2) if active_periods > 0 else 0.0,
-                'scalp_pct': (regime_counts.get('scalping', 0) / active_periods * 100).round(2) if active_periods > 0 else 0.0
+                'trend_pct': round(regime_counts.get('trend_following', 0) / active_periods * 100, 2) if active_periods > 0 else 0.0,
+                'merev_pct': round(regime_counts.get('mean_reversion', 0) / active_periods * 100, 2) if active_periods > 0 else 0.0,
+                'break_pct': round(regime_counts.get('breakout', 0) / active_periods * 100, 2) if active_periods > 0 else 0.0,
+                'scalp_pct': round(regime_counts.get('scalping', 0) / active_periods * 100, 2) if active_periods > 0 else 0.0
             }
             
             # Update with actual performance if there were trades

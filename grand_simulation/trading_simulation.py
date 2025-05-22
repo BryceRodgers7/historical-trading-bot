@@ -8,7 +8,7 @@ from technical_indicators import TechnicalIndicators
 class TradingSimulation:
     def __init__(self, name, symbol, timeframe, start_date, end_date, initial_balance=10000, lookback_window=100, 
                  ema_fast_window=9, ema_slow_window=21, bb_window=20, bb_std=2, rsi_window=14,
-                 stop_loss_pct=0.02, take_profit_pct=0.1, support_levels=None, resistance_levels=None):  
+                 stop_loss_pct=0.02, take_profit_pct=0.1, sup_res_levels=None):  
         self.initial_balance = initial_balance
         self.strategy_factory = RegimeStrategyFactory()
         self.technical_indicators = TechnicalIndicators(adx_period=14, ema_fast_window=ema_fast_window, 
@@ -24,8 +24,7 @@ class TradingSimulation:
         self.lookback_window = lookback_window
         self.stop_loss_pct = stop_loss_pct
         self.take_profit_pct = take_profit_pct
-        self.support_levels = support_levels or []
-        self.resistance_levels = resistance_levels or []
+        self.sup_res_levels = sup_res_levels or []
         self.warmup_periods = max(
             self.regime_detector.trend_window,
             self.regime_detector.volatility_window,
@@ -131,6 +130,8 @@ class TradingSimulation:
         """
         if len(data) <= self.warmup_periods:
             raise ValueError(f"Not enough data points. Need at least {self.warmup_periods} periods, got {len(data)}")
+        else:
+            print(f"Running simulation for {self.name} with {len(data)} data points and {self.warmup_periods} warmup periods")
         
         df = data.copy()
         
@@ -167,7 +168,7 @@ class TradingSimulation:
             # REGIME OVERRIDE
             regime = MarketRegime.TREND_FOLLOWING.value
 
-            strategy = self.strategy_factory.get_strategy(current_regime, self.support_levels, self.resistance_levels)
+            strategy = self.strategy_factory.get_strategy(current_regime, self.sup_res_levels)
 
             # Generate signals if we have a strategy
             if strategy:
