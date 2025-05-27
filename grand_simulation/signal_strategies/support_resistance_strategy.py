@@ -73,33 +73,64 @@ class SupportResistanceStrategy:
     def _check_bounce(self, df, level: float, level_type: str) -> bool:
         """
         Check if the most recent candle shows a confirmed bounce off a price level.
+        A bounce is confirmed when price approaches a level but reverses before breaking through.
         
         Parameters:
         df (pd.DataFrame): The last 'window' of data before the current candle
         level (float): The price level to check
         level_type (str): 'support' or 'resistance' indicating how the level is being used
-        tolerance_pct (float): Percentage tolerance for considering price near level
         
         Returns:
         bool: True if a bounce is confirmed
         """
-        # Define conditions for the most recent candle
+        # Need at least 2 candles for bounce confirmation
+        if len(df) < 2:
+            return False
+
+        # Define conditions for the most recent candles
         latest = df.iloc[-1]
-        prev_rsi = df['rsi'].iloc[-2] if len(df) >= 2 else np.nan
+        prev = df.iloc[-2]
 
         # Check if price is near the level
         if level_type == 'support':
-            near_level = (level * (1 - self.touch_threshold)) <= latest['low'] <= (level * (1 + self.touch_threshold))
-            correct_candle = latest['close'] > latest['open']  # Bullish for support
-            rsi_moving = latest['rsi'] > prev_rsi  # Rising RSI for support
+            approached = prev['low'] <= (level * (1 + self.touch_threshold))
+            closed_above_support = latest['close'] > level  # confirmation we moved away
+            rejected_breakdown = latest['low'] < level and latest['close'] > latest['open']  # wick + bullish
+            rsi_up = latest['rsi'] > prev['rsi']
+            volume_ok = latest['volume_spike']
+            # For support bounces:
+            # 1. Previous candle should have approached support (low near or below support)
+            # 2. Current candle should show a bounce (close above support)
+            # 3. Should not have broken through support (low should not be too far below)
+            # approached_support = prev['low'] <= (level * (1 + self.touch_threshold))
+            # bounced_off = latest['close'] > level
+            # didnt_break = latest['low'] >= (level * (1 - self.touch_threshold)) and latest['open'] >= (level * (1 - self.touch_threshold))
+            # bullish_candle = latest['close'] > latest['open']
+            # rsi_moving_up = latest['rsi'] > prev['rsi']
+            # volume_confirmed = latest['volume_spike']
+
+            # return all([approached_support, bounced_off, didnt_break, bullish_candle, rsi_moving_up, volume_confirmed])
+            return all([approached, closed_above_support, rejected_breakdown, rsi_up, volume_ok])
+
         else:  # resistance
-            near_level = (level * (1 - self.touch_threshold)) <= latest['high'] <= (level * (1 + self.touch_threshold))
-            correct_candle = latest['close'] < latest['open']  # Bearish for resistance
-            rsi_moving = latest['rsi'] < prev_rsi  # Falling RSI for resistance
+            approached = prev['high'] >= (level * (1 - self.touch_threshold))
+            closed_below_resistance = latest['close'] < level
+            rejected_breakout = latest['high'] > level and latest['close'] < latest['open']
+            rsi_down = latest['rsi'] < prev['rsi']
+            volume_ok = latest['volume_spike']
+            # For resistance bounces:
+            # 1. Previous candle should have approached resistance (high near or above resistance)
+            # 2. Current candle should show a bounce (close below resistance)
+            # 3. Should not have broken through resistance (high should not be too far above)
+            # approached_resistance = prev['high'] >= (level * (1 - self.touch_threshold))
+            # bounced_off = latest['close'] < level
+            # didnt_break = latest['high'] <= (level * (1 + self.touch_threshold)) and latest['open'] <= (level * (1 + self.touch_threshold))
+            # bearish_candle = latest['close'] < latest['open']
+            # rsi_moving_down = latest['rsi'] < prev['rsi']
+            # volume_confirmed = latest['volume_spike']
 
-        volume_spike = latest['volume_spike']
-
-        return all([near_level, correct_candle, rsi_moving, volume_spike])
+            # return all([approached_resistance, bounced_off, didnt_break, bearish_candle, rsi_moving_down, volume_confirmed])
+            return all([approached, closed_below_resistance, rejected_breakout, rsi_down, volume_ok])
     
     def generate_signals(self, df):
         """

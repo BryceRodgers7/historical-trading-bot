@@ -15,7 +15,7 @@ class SimulationManager:
         
     def add_simulation(self, name, symbol, timeframe, start_date, end_date, initial_balance=10000, 
                        ema_fast_window=9, ema_slow_window=21, bb_window=20, bb_std=2, rsi_window=14, 
-                       lookback_window=100, stop_loss_pct=0.02, take_profit_pct=0.04, 
+                       lookback_window=100, stop_loss_pct=None, take_profit_pct=None, 
                        sup_res_levels=None):
         """
         Add a new simulation scenario
@@ -124,6 +124,8 @@ class SimulationManager:
             return summary.get_returns_summary()
         elif summary_type == 'timeframe':
             return summary.get_timeframe_comparison()
+        elif summary_type == 'trades':
+            return summary.get_trades_summary()
         else:
             raise ValueError(f"Unknown summary type: {summary_type}")
     

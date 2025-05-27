@@ -8,7 +8,7 @@ from technical_indicators import TechnicalIndicators
 class TradingSimulation:
     def __init__(self, name, symbol, timeframe, start_date, end_date, initial_balance=10000, lookback_window=100, 
                  ema_fast_window=9, ema_slow_window=21, bb_window=20, bb_std=2, rsi_window=14,
-                 stop_loss_pct=0.02, take_profit_pct=0.1, sup_res_levels=None):  
+                 stop_loss_pct=None, take_profit_pct=None, sup_res_levels=None):  
         self.initial_balance = initial_balance
         self.strategy_factory = RegimeStrategyFactory()
         self.technical_indicators = TechnicalIndicators(adx_period=14, ema_fast_window=ema_fast_window, 
@@ -34,7 +34,7 @@ class TradingSimulation:
             self.technical_indicators.adx_period
         )
 
-    def _update_position(self, df, i, current_position, entry_price, entry_time, trades):
+    def _update_position(self, df, i, current_position, entry_price, entry_time, trades, stop_loss_pct=None, take_profit_pct=None):
         """
         Update trading position based on signal, stop loss, and take profit.
         Only takes long positions (signal == 1).
@@ -46,6 +46,8 @@ class TradingSimulation:
         entry_price (float): Entry price of current position
         entry_time (datetime): Entry time of current position
         trades (list): List of completed trades
+        stop_loss_pct (float, optional): Stop loss percentage. If None, no stop loss is used.
+        take_profit_pct (float, optional): Take profit percentage. If None, no take profit is used.
         
         Returns:
         tuple: (new_position, new_entry_price, new_entry_time)
@@ -58,8 +60,8 @@ class TradingSimulation:
             # Calculate price change percentage for long position
             price_change_pct = (current_price - entry_price) / entry_price
             
-            # Check stop loss
-            if price_change_pct <= -self.stop_loss_pct:
+            # Check stop loss if provided
+            if stop_loss_pct is not None and price_change_pct <= -stop_loss_pct:
                 # Close position due to stop loss
                 exit_price = current_price
                 pnl = exit_price - entry_price  # Simplified for long-only
@@ -75,8 +77,8 @@ class TradingSimulation:
                 })
                 return 0, 0, None  # Return to flat position
             
-            # Check take profit
-            if price_change_pct >= self.take_profit_pct:
+            # Check take profit if provided
+            if take_profit_pct is not None and price_change_pct >= take_profit_pct:
                 # Close position due to take profit
                 exit_price = current_price
                 pnl = exit_price - entry_price  # Simplified for long-only
@@ -181,7 +183,9 @@ class TradingSimulation:
             
             # Update position based on signal
             current_position, entry_price, entry_time = self._update_position(
-                df, i, current_position, entry_price, entry_time, trades
+                df, i, current_position, entry_price, entry_time, trades,
+                stop_loss_pct=self.stop_loss_pct,
+                take_profit_pct=self.take_profit_pct
             )
             
             # Update position and equity

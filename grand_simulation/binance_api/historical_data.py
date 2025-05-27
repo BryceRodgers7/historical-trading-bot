@@ -1,6 +1,8 @@
 import pandas as pd
 import ccxt
 from datetime import datetime, timedelta, timezone
+import argparse
+import os
 
 class HistoricalDataFetcher:
     def __init__(self):
@@ -90,3 +92,95 @@ class HistoricalDataFetcher:
         data = data[mask]
         
         return data 
+
+    def save_to_csv(self, data: pd.DataFrame, filename: str):
+        """
+        Save DataFrame to CSV file
+        
+        Parameters:
+        data (pd.DataFrame): Data to save
+        filename (str): Name of the CSV file
+        
+        Returns:
+        str: Path to the saved file
+        """
+        # Create data directory if it doesn't exist
+        os.makedirs('data', exist_ok=True)
+        
+        # Ensure filename has .csv extension
+        if not filename.endswith('.csv'):
+            filename += '.csv'
+            
+        # Construct full path
+        filepath = os.path.join('data', filename)
+        
+        # Save to CSV
+        data.to_csv(filepath)
+        print(f"Data saved to {filepath}")
+        return filepath
+
+def main():
+    """
+    Main function to fetch historical data and save to CSV
+    Usage examples:
+        python historical_data.py --symbol BTC/USDT --timeframe 1h --days 90
+        python historical_data.py --symbol ETH/USDT --timeframe 4h --start 2023-01-01 --end 2023-12-31
+    """
+    parser = argparse.ArgumentParser(description='Fetch historical cryptocurrency data from Binance US')
+    
+    # Required arguments
+    parser.add_argument('--symbol', type=str, default='BTC/USDT',
+                      help='Trading pair symbol (e.g., BTC/USDT)')
+    parser.add_argument('--timeframe', type=str, default='4h',
+                      help='Candlestick timeframe (e.g., 1h, 4h, 1d)')
+    
+    # Optional arguments
+    parser.add_argument('--days', type=int, default=365,
+                      help='Number of days of historical data to fetch (default: 365)')
+    parser.add_argument('--start', type=str, default='2023-01-01',
+                      help='Start date (YYYY-MM-DD). If not provided, uses --days from now')
+    parser.add_argument('--end', type=str, default='2024-01-01',
+                      help='End date (YYYY-MM-DD). If not provided, uses current time')
+    parser.add_argument('--output', type=str, default='historical_data',
+                      help='Output filename (without .csv extension). If not provided, uses symbol_timeframe.csv')
+    
+    args = parser.parse_args()
+    
+    # Parse dates
+    if args.start:
+        start_date = datetime.strptime(args.start, '%Y-%m-%d')
+    else:
+        start_date = datetime.now() - timedelta(days=args.days)
+        
+    if args.end:
+        end_date = datetime.strptime(args.end, '%Y-%m-%d')
+    else:
+        end_date = datetime.now()
+    
+    # Generate output filename if not provided
+    if not args.output:
+        args.output = f"{args.symbol.replace('/', '_')}_{args.timeframe}"
+    
+    try:
+        # Initialize fetcher and get data
+        fetcher = HistoricalDataFetcher()
+        print(f"Fetching {args.symbol} data from {start_date.date()} to {end_date.date()} ({args.timeframe} timeframe)")
+        
+        data = fetcher.fetch_historical_data(
+            symbol=args.symbol,
+            timeframe=args.timeframe,
+            start_date=start_date,
+            end_date=end_date
+        )
+        
+        # Save to CSV
+        fetcher.save_to_csv(data, args.output)
+        
+    except Exception as e:
+        print(f"Error: {e}")
+        return 1
+        
+    return 0
+
+if __name__ == '__main__':
+    exit(main()) 

@@ -37,12 +37,12 @@ def run_market_scenarios():
         # 'Sideways Q3 2020': (datetime(2020, 7, 1), datetime(2020, 10, 1)),  # Pre-breakout
 
         # # Support/Resistance Markets
-        'Sup/Res 2024': (datetime(2024, 1, 1), datetime(2025, 1, 1)),  # Pre-COVID
+        # 'Sup/Res 2024': (datetime(2024, 1, 1), datetime(2025, 1, 1)),  # Pre-COVID
         'Sup/Res 2023': (datetime(2023, 3, 1), datetime(2024, 1, 1)),  # Recent consolidation
     }
     
     # Define timeframes and EMA settings to test
-    timeframes = ['1d', '4h', '1h', '15m']
+    timeframes = ['4h']
     ema_settings = [
         # {'name': '', 'fast': 9, 'slow': 21},  # Default settings
         {'name': 'ema20', 'fast': 20, 'slow': 50}  # Alternative settings
@@ -90,6 +90,9 @@ def run_market_scenarios():
         print("\nSorted Summary (sorted by outperformance):")
         returns_summary = manager.get_summary('returns')
         print(returns_summary)
+        print("\nTrades Summary:")
+        trades_summary = manager.get_summary('trades')
+        print(trades_summary)
         
         # Group results by market type
         # print("\nResults by Market Type:")

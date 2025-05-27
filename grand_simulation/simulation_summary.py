@@ -262,3 +262,65 @@ class SimulationSummary:
         plt.tight_layout()
         
         return fig
+
+    def get_trades_summary(self, simulation_name=None):
+        """
+        Get a detailed table of trades for one or all simulations
+        
+        Parameters:
+        simulation_name (str, optional): Name of specific simulation to get trades for. 
+                                       If None, returns trades for all simulations.
+        
+        Returns:
+        pd.DataFrame: DataFrame containing all trades with columns:
+            - simulation: Name of the simulation
+            - entry_time: Time of trade entry
+            - exit_time: Time of trade exit
+            - entry_price: Price at entry
+            - exit_price: Price at exit
+            - position: Long or Short
+            - pnl: Profit/Loss in percentage
+            - regime: Market regime at entry
+            - exit_reason: Reason for trade exit
+            - holding_periods: Number of periods held
+        """
+        all_trades = []
+        
+        # Determine which simulations to process
+        simulations = [simulation_name] if simulation_name else self.results.keys()
+        
+        for name in simulations:
+            if name not in self.results:
+                print(f"Warning: Simulation '{name}' not found")
+                continue
+                
+            result = self.results[name]
+            if not result['performance'] or result['trades'].empty:
+                continue
+                
+            trades_df = result['trades'].copy()
+            trades_df['simulation'] = name
+            
+            # Reorder columns for better readability
+            columns = [
+                'simulation', 'entry_time', 'exit_time', 'entry_price', 'exit_price',
+                'position', 'pnl', 'regime', 'exit_reason', 'holding_periods'
+            ]
+            
+            # Only include columns that exist in the trades DataFrame
+            available_columns = [col for col in columns if col in trades_df.columns]
+            trades_df = trades_df[available_columns]
+            
+            all_trades.append(trades_df)
+        
+        if not all_trades:
+            return pd.DataFrame()  # Return empty DataFrame if no trades found
+            
+        # Combine all trades into one DataFrame
+        combined_trades = pd.concat(all_trades, ignore_index=True)
+        
+        # Sort by entry time
+        if 'entry_time' in combined_trades.columns:
+            combined_trades = combined_trades.sort_values('entry_time')
+            
+        return combined_trades
