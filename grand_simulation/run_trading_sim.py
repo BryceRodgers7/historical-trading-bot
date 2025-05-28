@@ -37,7 +37,7 @@ def run_market_scenarios():
         # 'Sideways Q3 2020': (datetime(2020, 7, 1), datetime(2020, 10, 1)),  # Pre-breakout
 
         # # Support/Resistance Markets
-        # 'Sup/Res 2024': (datetime(2024, 1, 1), datetime(2025, 1, 1)),  # Pre-COVID
+        'Sup/Res 2024': (datetime(2024, 1, 1), datetime(2025, 1, 1)),  # Pre-COVID
         'Sup/Res 2023': (datetime(2023, 3, 1), datetime(2024, 1, 1)),  # Recent consolidation
     }
     
