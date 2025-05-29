@@ -12,29 +12,29 @@ def run_market_scenarios():
     # Define market periods with multiple examples of each regime
     market_periods = {
         # Bull Markets
-        # 'Bull Market Q4 2020': (datetime(2020, 10, 1), datetime(2021, 1, 1)),  # Post-COVID recovery
-        # 'Bull Market Q1 2023': (datetime(2023, 1, 1), datetime(2023, 4, 1)),  # Strong uptrend
-        # 'Bull Market Q4 2023': (datetime(2023, 11, 1), datetime(2024, 2, 1)),  # Previous cycle peak
+        'Bull Market Q4 2020': (datetime(2020, 10, 1), datetime(2021, 1, 1)),  # Post-COVID recovery
+        'Bull Market Q1 2023': (datetime(2023, 1, 1), datetime(2023, 4, 1)),  # Strong uptrend
+        'Bull Market Q4 2023': (datetime(2023, 11, 1), datetime(2024, 2, 1)),  # Previous cycle peak
         
-        # # Bear Markets
-        # 'Bear Market Q2 2023': (datetime(2023, 4, 1), datetime(2023, 7, 1)),  # Recent correction
-        # 'Bear Market Q1 2022': (datetime(2022, 1, 1), datetime(2022, 4, 1)),  
+        # Bear Markets
+        'Bear Market Q2 2023': (datetime(2023, 4, 1), datetime(2023, 7, 1)),  # Recent correction
+        'Bear Market Q1 2022': (datetime(2022, 1, 1), datetime(2022, 4, 1)),  
         
-        # # High Volatility Periods
-        # 'High Vol Q1 2020': (datetime(2020, 1, 1), datetime(2020, 4, 1)),  # COVID crash
-        # 'High Vol Q3 2021': (datetime(2021, 5, 1), datetime(2021, 8, 1)),
-        # 'High Vol Q3 2023': (datetime(2023, 7, 1), datetime(2023, 10, 1)),  # Recent volatility
+        # High Volatility Periods
+        'High Vol Q1 2020': (datetime(2020, 1, 1), datetime(2020, 4, 1)),  # COVID crash
+        'High Vol Q3 2021': (datetime(2021, 5, 1), datetime(2021, 8, 1)),
+        'High Vol Q3 2023': (datetime(2023, 7, 1), datetime(2023, 10, 1)),  # Recent volatility
         
         
-        # # Low Volatility Periods
-        # 'Low Vol Q4 2023': (datetime(2023, 10, 1), datetime(2024, 1, 1)),  # Recent consolidation
-        # 'Low Vol Q4 2020': (datetime(2020, 9, 1), datetime(2020, 12, 1)),
-        # 'Low Vol Q4 2023': (datetime(2023, 8, 1), datetime(2023, 11, 1)),  
+        # Low Volatility Periods
+        'Low Vol Q4 2023': (datetime(2023, 10, 1), datetime(2024, 1, 1)),  # Recent consolidation
+        'Low Vol Q4 2020': (datetime(2020, 9, 1), datetime(2020, 12, 1)),
+        'Low Vol Q4 2023': (datetime(2023, 8, 1), datetime(2023, 11, 1)),  
         
-        # # Sideways/Choppy Markets
-        # 'Sideways Q2 2021': (datetime(2021, 4, 1), datetime(2021, 7, 1)),  # Post-April 2021 peak
-        # 'Sideways Q1 2020': (datetime(2020, 1, 1), datetime(2020, 4, 1)),   # Pre-COVID
-        # 'Sideways Q3 2020': (datetime(2020, 7, 1), datetime(2020, 10, 1)),  # Pre-breakout
+        # Sideways/Choppy Markets
+        'Sideways Q2 2021': (datetime(2021, 4, 1), datetime(2021, 7, 1)),  # Post-April 2021 peak
+        'Sideways Q1 2020': (datetime(2020, 1, 1), datetime(2020, 4, 1)),   # Pre-COVID
+        'Sideways Q3 2020': (datetime(2020, 7, 1), datetime(2020, 10, 1)),  # Pre-breakout
 
         # # Support/Resistance Markets
         'Sup/Res 2024': (datetime(2024, 1, 1), datetime(2025, 1, 1)),  # Pre-COVID
